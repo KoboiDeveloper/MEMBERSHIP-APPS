@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Georgia Regular";
+  font-style: normal;
+  font-weight: normal;
+  src: local("Georgia Regular"), url("./fonts/georgia.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Montserrat Regular";
+  font-style: normal;
+  font-weight: normal;
+  src: local("Montserrat Regular"),
+    url("./fonts/Montserrat-Regular.woff") format("woff");
+}
+
+.fontMon {
+  font-family: "Montserrat Regular";
+  font-style: normal;
+  font-weight: normal;
+  src: local("Montserrat Regular"),
+    url("./fonts/Montserrat-Regular.woff") format("woff");
+}
+
+body {
+  font-family: "Georgia Regular";
+  font-style: normal;
+  font-weight: normal;
+  src: local("Georgia Regular"), url("./fonts/georgia.woff") format("woff");
+}
+
+select {
+  background: white;
+}
+
+/* Ubah ukuran bullet */
+.swiper-pagination-bullet {
+  width: 16px;
+  height: 16px;
+}
+
+ol,
+li {
+  list-style-type: decimal;
+  list-style-position: inside;
+}
+
+/* Menambahkan transisi pada transformasi */
+.scale-slide {
+  transition: transform 0.3s ease; /* Durasi 0.3 detik dengan efek transisi yang halus */
+}
+
+@media (min-width: 0px) and (max-width: 349px) {
+  .scale-slide {
+    transform: scale(0.75);
+  }
+}
+
+@media (min-width: 350px) and (max-width: 374px) {
+  .scale-slide {
+    transform: scale(0.85);
+  }
+}
+
+@media (min-width: 375px) and (max-width: 410px) {
+  .scale-slide {
+    transform: scale(0.9);
+  }
+}
+
+@media (min-width: 411px) and (max-width: 429px) {
+  .scale-slide {
+    transform: scale(0.95);
+  }
+}
+
+@media (min-width: 430px) {
+  .scale-slide {
+    transform: scale(1); /* Normal */
+  }
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
+  transform: translateX(-50%);
+}
+
+/* Slide motion for modal mission */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out forwards;
+}
