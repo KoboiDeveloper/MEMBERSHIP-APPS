@@ -44,9 +44,7 @@ type Milestone = {
 export default function Page() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { error, data, loading } = useSelector(
-    (state: RootState) => state.mission
-  );
+  const { error, data } = useSelector((state: RootState) => state.mission);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [successMessageClaim, setSuccessMessageClaim] = useState(false);
@@ -121,7 +119,7 @@ export default function Page() {
     }
   };
 
-  if (loading) {
+  if (!data) {
     return (
       <div className="flex flex-col gap-4 justify-center items-center h-screen">
         <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
@@ -139,7 +137,7 @@ export default function Page() {
   claimDeadline.setMonth(claimDeadline.getMonth() + 1);
 
   return (
-    <>
+    <div className="pb-8">
       {(() => {
         const expiredMissions =
           data?.missionsData?.filter((mission) => {
@@ -352,6 +350,6 @@ export default function Page() {
           }
         }
       `}</style>
-    </>
+    </div>
   );
 }

@@ -49,9 +49,7 @@ export default function Mission({
 }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { error, data, loading } = useSelector(
-    (state: RootState) => state.mission
-  );
+  const { error, data } = useSelector((state: RootState) => state.mission);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [successMessageClaim, setSuccessMessageClaim] = useState(false);
@@ -147,9 +145,8 @@ export default function Mission({
         setSuccessMessageClaim(true);
         setTimeout(() => {
           setSuccessMessageClaim(false);
-          setIsModalOpen(false);
+          dispatch(getMission());
         }, 3000);
-        dispatch(getMission());
       } else {
         console.error("Failed to claim milestone:", response.data);
       }
@@ -160,7 +157,7 @@ export default function Mission({
     }
   };
 
-  if (loading) {
+  if (!data) {
     return (
       <div className="flex flex-col gap-4 justify-center items-center h-screen">
         <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
@@ -177,7 +174,7 @@ export default function Mission({
   const claimDeadline = new Date(endDate);
   claimDeadline.setMonth(claimDeadline.getMonth() + 1);
   return (
-    <>
+    <div className="pb-8">
       {(() => {
         const activeMissions =
           data?.missionsData?.filter((mission) => {
@@ -402,6 +399,6 @@ export default function Mission({
           }
         }
       `}</style>
-    </>
+    </div>
   );
 }
