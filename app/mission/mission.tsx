@@ -40,6 +40,7 @@ type Milestone = {
   milPassDate: string | null;
   milReward: string;
   milCurrentValue: number;
+  RewardCategory: string;
 };
 
 export default function Mission({
@@ -368,12 +369,24 @@ export default function Mission({
                           )}
                         </>
                       ) : (
-                        <Link
-                          href={"/voucher"}
-                          className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
-                        >
-                          Lihat Voucher
-                        </Link>
+                        <>
+                          {milestone.RewardCategory === "Voucher" ? (
+                            <Link
+                              href={"/voucher"}
+                              className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
+                            >
+                              Lihat Voucher
+                            </Link>
+                          ) : (
+                            <Link
+                              href="https://tally.so/r/3lG9Lp"
+                              target="_blank"
+                              className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
+                            >
+                              Input Alamat
+                            </Link>
+                          )}
+                        </>
                       )}
                     </div>
                   )

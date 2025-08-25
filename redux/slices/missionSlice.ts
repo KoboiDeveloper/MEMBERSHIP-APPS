@@ -26,6 +26,7 @@ type Milestone = {
     milPassDate: string | null;
     milReward: string;
     milCurrentValue: number;
+    RewardCategory: string;
 }
 
 interface MissionState {
