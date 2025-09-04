@@ -55,7 +55,8 @@ export default function Mission({
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [successMessageClaim, setSuccessMessageClaim] = useState(false);
   const [loadingId, setLoadingId] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<number | null>(null);
+  const [claimedMilestones, setClaimedMilestones] = useState<number[]>([]);
 
   useEffect(() => {
     const member = localStorage.getItem("member");
@@ -123,7 +124,7 @@ export default function Mission({
 
   // Handle milestone claim
   const handleClaimMilestone = async (milestone: Milestone) => {
-    setIsLoading(true);
+    setIsLoading(milestone.idMil);
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
@@ -142,19 +143,19 @@ export default function Mission({
         }
       );
 
-      if (response.data.responseCode == "2002500") {
+      if (response.data.responseCode === "2002500") {
+        setClaimedMilestones((prev) => [...prev, milestone.idMil]);
         setSuccessMessageClaim(true);
-        setTimeout(() => {
-          setSuccessMessageClaim(false);
-          dispatch(getMission());
-        }, 3000);
+        setTimeout(() => setSuccessMessageClaim(false), 3000);
       } else {
         console.error("Failed to claim milestone:", response.data);
+        alert("Gagal klaim milestone, silakan coba lagi."); // beri feedback ke user
       }
     } catch (error) {
       console.error("Error claiming milestone:", error);
+      alert("Terjadi kesalahan saat klaim milestone."); // beri feedback ke user
     } finally {
-      setIsLoading(false);
+      setIsLoading(null); // reset loading supaya tombol bisa diklik lagi
     }
   };
 
@@ -364,23 +365,24 @@ export default function Mission({
                       </div>
 
                       {/* button klaim */}
-                      {milestone.milClaimDate === "" ? (
-                        <>
-                          {milestone.milClaimStatus == "complete" && (
-                            <button
-                              className={`bg-base-accent text-white text-xs rounded-md py-1 px-4`}
-                              onClick={() => handleClaimMilestone(milestone)}
-                              disabled={isLoading}
-                            >
-                              Klaim
-                            </button>
-                          )}
-                        </>
+                      {milestone.milClaimDate === "" &&
+                      !claimedMilestones.includes(milestone.idMil) ? (
+                        milestone.milClaimStatus === "complete" && (
+                          <button
+                            className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
+                            onClick={() => handleClaimMilestone(milestone)}
+                            disabled={isLoading === milestone.idMil}
+                          >
+                            {isLoading === milestone.idMil
+                              ? "Klaiming..."
+                              : "Klaim"}
+                          </button>
+                        )
                       ) : (
                         <>
                           {milestone.RewardCategory === "Voucher" ? (
                             <Link
-                              href={"/voucher"}
+                              href="/voucher"
                               className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
                             >
                               Lihat Voucher
