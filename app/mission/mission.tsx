@@ -317,10 +317,16 @@ export default function Mission({
                           {milestone.milDesc}
                         </h3>
                         <p className="text-xs">
-                          Target: {formatToIDR(milestone.milValue)}
+                          Target: {formatToIDR(milestone.milValue)}{" "}
+                          {selectedMission.category == "TOTAL_TRANSAKSI"
+                            ? "Transaksi"
+                            : ""}
                         </p>
                         <p className="text-xs">
-                          Tercapai: {formatToIDR(milestone.milCurrentValue)}
+                          Tercapai: {formatToIDR(milestone.milCurrentValue)}{" "}
+                          {selectedMission.category == "TOTAL_TRANSAKSI"
+                            ? "Transaksi"
+                            : ""}
                         </p>
                         <p className="text-xs">
                           Status: {milestone.milClaimStatus}
