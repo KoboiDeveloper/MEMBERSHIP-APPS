@@ -54,6 +54,7 @@ export default function Mission({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [successMessageClaim, setSuccessMessageClaim] = useState(false);
+  const [loadingId, setLoadingId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -88,7 +89,7 @@ export default function Mission({
 
   // handle join mission
   const handleJoinMission = async (missionId: number) => {
-    setIsLoading(true);
+    setLoadingId(missionId); // set mission yang sedang loading
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -104,11 +105,10 @@ export default function Mission({
           },
         }
       );
-      if (response.data.responseCode == "2002500") {
+
+      if (response.data.responseCode === "2002500") {
         setSuccessMessageJoin(true);
-        setTimeout(() => {
-          setSuccessMessageJoin(false);
-        }, 3000);
+        setTimeout(() => setSuccessMessageJoin(false), 3000);
         setIsModalOpen(false);
         dispatch(getMission());
       } else {
@@ -117,7 +117,7 @@ export default function Mission({
     } catch (error) {
       console.error("Error joining mission:", error);
     } finally {
-      setIsLoading(false);
+      setLoadingId(null); // reset loadingId setelah request selesai
     }
   };
 
@@ -244,10 +244,12 @@ export default function Mission({
                       {mission.statusMission === "" && (
                         <div className="flex justify-center py-5">
                           <Button
-                            label={isLoading ? "Joining..." : "JOIN"}
+                            label={
+                              loadingId === mission.id ? "Joining..." : "JOIN"
+                            }
                             className="bg-base-accent text-white"
                             onClick={() => handleJoinMission(mission.id)}
-                            disabled={isLoading}
+                            disabled={loadingId === mission.id}
                           />
                         </div>
                       )}
