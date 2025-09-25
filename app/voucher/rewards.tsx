@@ -79,15 +79,37 @@ export default function Rewards() {
     return <p>Error: {error}</p>;
   }
 
+  // Filter: expired lebih dari 1 bulan (30 hari)
+  const isVoucherTooOld = (expiryDate: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiry = new Date(expiryDate.split("/").reverse().join("-"));
+    const oneMonthAfterExpiry = new Date(expiry);
+    oneMonthAfterExpiry.setMonth(oneMonthAfterExpiry.getMonth() + 1);
+
+    // Jika hari ini lewat dari 1 bulan setelah expired
+    return today.getTime() > oneMonthAfterExpiry.getTime();
+  };
+
   return (
     <>
       {/* card */}
-
       {data && data.rewardData ? (
-        data.rewardData.length > 0 ? (
-          data.rewardData.map((item: Rewards, index: number) => {
-            // const isActive = new Date(item.expiredDate) >= new Date();
+        (() => {
+          const filteredVouchers = data.rewardData.filter(
+            (item: Rewards) => !isVoucherTooOld(item.expiredDate)
+          );
 
+          if (filteredVouchers.length === 0) {
+            return (
+              <p className="text-center text-gray-500">
+                Tidak ada voucher yang tersedia.
+              </p>
+            );
+          }
+
+          return filteredVouchers.map((item: Rewards, index: number) => {
             return (
               <div
                 className={`bg-white w-full rounded-lg border border-gray-300 flex flex-col items-center justify-between mb-4 ${
@@ -127,10 +149,8 @@ export default function Rewards() {
                 </div>
               </div>
             );
-          })
-        ) : (
-          <p className="text-center text-gray-500">Belum memiliki voucher.</p>
-        )
+          });
+        })()
       ) : (
         <p className="text-center text-gray-500">Belum memiliki voucher.</p>
       )}
