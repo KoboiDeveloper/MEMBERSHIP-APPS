@@ -6,7 +6,6 @@ import { getVoucherList } from "@/redux/thunks/voucherListThunk";
 import formatToIDR from "@/utils/formatToIDR";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import Barcode from "react-barcode";
 import { useSelector } from "react-redux";
 import { FadeLoader } from "react-spinners";
 
@@ -65,107 +64,124 @@ export default function Vouchers() {
     return expiry.getTime() < today.getTime(); // Expired jika lebih kecil dari hari ini
   };
 
+  // Filter: expired lebih dari 1 bulan (30 hari)
+  const isVoucherTooOld = (expiryDate: string) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiry = new Date(expiryDate.split("/").reverse().join("-"));
+    const oneMonthAfterExpiry = new Date(expiry);
+    oneMonthAfterExpiry.setMonth(oneMonthAfterExpiry.getMonth() + 1);
+
+    // Jika hari ini lewat dari 1 bulan setelah expired
+    return today.getTime() > oneMonthAfterExpiry.getTime();
+  };
+
   return (
     <>
       {/* Card */}
       {data && data.voucherData ? (
-        data.voucherData.length > 0 &&
-        data.voucherData.map((item: Voucher) => {
-          const expired = isVoucherExpired(item.tanggalExpired);
-          return (
-            <div
-              className={`w-full max-w-md rounded-lg p-6 flex flex-col justify-between space-y-4 shadow-md mb-4 
-                ${
-                  item.category === "VCR"
-                    ? "bg-[#E0DDD4] text-black"
-                    : "bg-[#131010] text-white"
-                } 
-                ${
-                  expired || item.voucherStatus === "used"
-                    ? "opacity-50 cursor-not-allowed"
-                    : "cursor-pointer"
-                }
-              `}
-              key={item.id}
-              onClick={() => !expired && handleShowVoucher(item.noVoucher)}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                  <span className="text-sm">
-                    {item.category == "VCR"
-                      ? "Voucher"
-                      : item.category == "MISSION"
-                      ? "Voucher Misi"
-                      : "Voucher Spesial"}
-                    <span className="px-1 normal-case">
-                      {item.type === "CASHBACK" ? "Cashback" : " "}
-                    </span>
-                  </span>
-
-                  <div className="">
-                    <span
-                      className={`text-sm ${
-                        item.category == "VCR" ? "text-[#131010]" : "text-white"
-                      }`}
-                    >
-                      Code :{" "}
-                    </span>
-                    <span className="text-sm">{item.noVoucher}</span>
-                  </div>
-                </div>
-                {item.category == "VCR" ? (
-                  <Image
-                    src="/images/logo.svg"
-                    width={50}
-                    height={50}
-                    alt="logo"
-                  />
-                ) : (
-                  <Image
-                    src="/images/logo-white.svg"
-                    width={50}
-                    height={50}
-                    alt="logo"
-                  />
-                )}
-              </div>
-
-              <div className="flex justify-end">
-                <h1
-                  className={`text-xl font-bold ${
-                    item.category == "VCR" ? "text-[#131010]" : "text-white"
-                  }`}
-                >
-                  Rp {formatToIDR(item.nominal)}
-                </h1>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span
-                  className={`text-xs ${
-                    item.category == "VCR" ? "text-[#131010]" : "text-white"
-                  }`}
-                >
-                  <Countdown targetDate={item.tanggalExpired} />
-                </span>
-                {/* <Barcode
-                  value={item.noVoucher}
-                  displayValue={false}
-                  height={20}
-                  margin={0}
-                  width={1}
-                  lineColor={`${
-                    item.category == "VCR" ? "#131010" : "#F8FAFC"
-                  }`}
-                  background="transparent"
-                /> */}
-                <span className="text-[10px] fontMon">
-                  Berlaku hingga: {item.tanggalExpired}
-                </span>
-              </div>
-            </div>
+        (() => {
+          const filteredVouchers = data.voucherData.filter(
+            (item: Voucher) => !isVoucherTooOld(item.tanggalExpired)
           );
-        })
+
+          if (filteredVouchers.length === 0) {
+            return (
+              <p className="text-center text-gray-500">
+                Tidak ada voucher yang tersedia.
+              </p>
+            );
+          }
+
+          return filteredVouchers.map((item: Voucher, index: number) => {
+            const expired = isVoucherExpired(item.tanggalExpired);
+            return (
+              <div
+                className={`w-full max-w-md rounded-lg p-6 flex flex-col justify-between space-y-4 shadow-md mb-4 
+                  ${
+                    item.category === "VCR"
+                      ? "bg-[#E0DDD4] text-black"
+                      : "bg-[#131010] text-white"
+                  } 
+                  ${
+                    expired || item.voucherStatus === "used"
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer"
+                  }
+                `}
+                key={index}
+                onClick={() => !expired && handleShowVoucher(item.noVoucher)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col">
+                    <span className="text-sm">
+                      {item.category == "VCR"
+                        ? "Voucher"
+                        : item.category == "MISSION"
+                        ? "Voucher Misi"
+                        : "Voucher Spesial"}
+                      <span className="px-1 normal-case">
+                        {item.type === "CASHBACK" ? "Cashback" : " "}
+                      </span>
+                    </span>
+
+                    <div className="">
+                      <span
+                        className={`text-sm ${
+                          item.category == "VCR"
+                            ? "text-[#131010]"
+                            : "text-white"
+                        }`}
+                      >
+                        Code :{" "}
+                      </span>
+                      <span className="text-sm">{item.noVoucher}</span>
+                    </div>
+                  </div>
+                  {item.category == "VCR" ? (
+                    <Image
+                      src="/images/logo.svg"
+                      width={50}
+                      height={50}
+                      alt="logo"
+                    />
+                  ) : (
+                    <Image
+                      src="/images/logo-white.svg"
+                      width={50}
+                      height={50}
+                      alt="logo"
+                    />
+                  )}
+                </div>
+
+                <div className="flex justify-end">
+                  <h1
+                    className={`text-xl font-bold ${
+                      item.category == "VCR" ? "text-[#131010]" : "text-white"
+                    }`}
+                  >
+                    Rp {formatToIDR(item.nominal)}
+                  </h1>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <span
+                    className={`text-xs ${
+                      item.category == "VCR" ? "text-[#131010]" : "text-white"
+                    }`}
+                  >
+                    <Countdown targetDate={item.tanggalExpired} />
+                  </span>
+                  <span className="text-[10px] fontMon">
+                    Berlaku hingga: {item.tanggalExpired}
+                  </span>
+                </div>
+              </div>
+            );
+          });
+        })()
       ) : (
         <p className="text-center text-gray-500">Belum memiliki voucher.</p>
       )}

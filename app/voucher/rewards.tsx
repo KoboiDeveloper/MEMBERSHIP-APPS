@@ -6,6 +6,7 @@ import ModalQRReward from "@/components/ModalQrReward";
 import { useAppDispatch } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
 import { getRewards } from "@/redux/thunks/rewardsThunks";
+import { formatDots } from "@/utils/formatDots";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -84,7 +85,7 @@ export default function Rewards() {
 
       {data && data.rewardData ? (
         data.rewardData.length > 0 ? (
-          data.rewardData.map((item: Rewards) => {
+          data.rewardData.map((item: Rewards, index: number) => {
             // const isActive = new Date(item.expiredDate) >= new Date();
 
             return (
@@ -99,7 +100,7 @@ export default function Rewards() {
                     ? () => showModal(item.id)
                     : () => {}
                 }
-                key={item.id}
+                key={index}
               >
                 <Image
                   src={`https://web.amscorp.id:3060/imagestorage/gift/${item.image}`}
@@ -181,7 +182,16 @@ export default function Rewards() {
                 </div>
                 <div className="flex flex-col m-4">
                   <span className="text-sm mb-5">Terms & Condition</span>
-                  <span className="text-xs">{detail?.termsCondition}</span>
+                  {/* <span className="text-xs">{detail?.termsCondition}</span> */}
+                  <ul className="text-xs list-disc marker:text-black">
+                    {formatDots(detail?.termsCondition || "").map(
+                      (term, index) => (
+                        <li key={index} className="list-disc">
+                          {term}
+                        </li>
+                      )
+                    )}
+                  </ul>
                 </div>
               </div>
             </div>
