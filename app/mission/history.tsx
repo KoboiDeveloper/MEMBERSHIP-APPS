@@ -12,6 +12,7 @@ import axios from "axios";
 import SuccessMessage from "@/components/SuccessMessage";
 import { useRouter } from "next/navigation";
 import { formatDate, parseIndoDate } from "@/utils/formatMission";
+import getMissionStock from "@/utils/getMissionStock";
 
 type Mission = {
   id: number;
@@ -40,6 +41,7 @@ type Milestone = {
   milReward: string;
   milCurrentValue: number;
   RewardCategory: string;
+  sisaClaim: number | string | null;
 };
 
 export default function Page() {
@@ -50,6 +52,7 @@ export default function Page() {
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [successMessageClaim, setSuccessMessageClaim] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [claimedMilestones, setClaimedMilestones] = useState<number[]>([]);
 
   useEffect(() => {
     const member = localStorage.getItem("member");
@@ -70,7 +73,7 @@ export default function Page() {
   }, [isModalOpen]);
 
   const handleOpenModal = (
-    mission: (Mission & { milestonesDetail: Milestone[] }) | null
+    mission: (Mission & { milestonesDetail: Milestone[] }) | null,
   ) => {
     setSelectedMission(mission);
     setIsModalOpen(true);
@@ -92,18 +95,18 @@ export default function Page() {
         `${
           process.env.NEXT_PUBLIC_API_URL
         }mission/milestone/claim?memberID=${localStorage.getItem(
-          "member"
+          "member",
         )}&missionID=${selectedMission?.id}&milestoneID=${milestone.idMil}`,
         null,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.responseCode == "2002500") {
-        console.log("Milestone claimed successfully:", response.data);
+        setClaimedMilestones((prev) => [...prev, milestone.idMil]);
         setSuccessMessageClaim(true);
         setTimeout(() => {
           setSuccessMessageClaim(false);
@@ -118,6 +121,12 @@ export default function Page() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const canClaimByStock = (sisaClaim: string | number) => {
+    if (sisaClaim === "-") return true;
+    const stock = Number(sisaClaim);
+    return Number.isFinite(stock) && stock > 0;
   };
 
   if (!data) {
@@ -155,72 +164,89 @@ export default function Page() {
           );
         }
 
-        return expiredMissions.map((mission) => (
-          <div key={mission.id} className="px-4 pt-4">
-            <div className="bg-white w-full rounded-lg flex flex-col justify-between shadow-lg overflow-auto">
-              <div className="flex justify-between items-center">
-                <div className="flex flex-col w-full">
-                  <Image
-                    src={`https://web.amscorp.id:3060/imagestorage/mission/${mission.imageUrl}`}
-                    alt="mission"
-                    width={600}
-                    height={400}
-                    className="w-full max-h-52 object-cover bg-slate-400"
-                  />
-                  <div className="p-4">
-                    <div className="flex flex-col">
-                      <div className="mb-4">
-                        <span className="text-[10px] fontMon mb-4 text-amber-800 tracking-wider rounded-md bg-amber-50 p-2 border border-amber-200">
-                          {mission.brand.toUpperCase()}
+        return expiredMissions.map((mission) => {
+          const stock = getMissionStock(mission.milestonesDetail);
+          return (
+            <div key={mission.id} className="px-4 pt-4">
+              <div className="bg-white w-full rounded-lg flex flex-col justify-between shadow-lg overflow-auto">
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col w-full">
+                    <Image
+                      src={`https://web.amscorp.id:3060/imagestorage/mission/${mission.imageUrl}`}
+                      alt="mission"
+                      width={600}
+                      height={400}
+                      className="w-full max-h-52 object-cover bg-slate-400"
+                    />
+                    <div className="p-4">
+                      <div className="flex flex-col">
+                        <div className="mb-4">
+                          <span className="text-[10px] fontMon mb-4 text-amber-800 tracking-wider rounded-md bg-amber-50 p-2 border border-amber-200">
+                            {mission.brand.toUpperCase()}
+                          </span>
+                        </div>
+
+                        <span className="text-lg mb-1">{mission.title}</span>
+                        <span className="text-xs fontMon text-gray-600 mb-3">
+                          {mission.description}
+                        </span>
+
+                        <div className="flex justify-between mt-4">
+                          <span
+                            className="text-[10px] underline cursor-pointer opacity-50"
+                            onClick={() => handleOpenModal(mission)}
+                          >
+                            Cek Detail
+                          </span>
+
+                          {stock.type === "number" && (
+                            <span className="text-[10px] opacity-50">
+                              Stok: {stock.value}
+                            </span>
+                          )}
+
+                          {stock.type === "infinity" && (
+                            <span className="text-[10px] opacity-50 flex items-center gap-1">
+                              Stok: &#8734;
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-4">
+                          <hr />
+                        </div>
+
+                        <div className="text-[9px] fontMon opacity-50 tracking-wider mt-2">
+                          Progress: {mission.progressText}
+                        </div>
+
+                        <div className="flex justify-between items-center mt-2">
+                          <ProgressBarMileStone
+                            currentValue={mission.currentValue}
+                            maxValue={mission.maxValue}
+                            milestones={mission.milestones}
+                            milestonesDetail={mission.milestonesDetail}
+                          />
+                        </div>
+
+                        <span className="text-[10px] fontMon text-center tracking-wider opacity-50">
+                          {(() => {
+                            const endDate = parseIndoDate(mission.endDate);
+                            endDate.setHours(23, 59, 59, 999);
+
+                            return endDate > new Date()
+                              ? `Berakhir pada ${mission.endDate}`
+                              : "Misi telah berakhir";
+                          })()}
                         </span>
                       </div>
-
-                      <span className="text-lg mb-1">{mission.title}</span>
-                      <span className="text-xs fontMon text-gray-600 mb-3">
-                        {mission.description}
-                      </span>
-
-                      <span
-                        className="text-[10px] opacity-50 fontMon tracking-wider mt-4 cursor-pointer underline"
-                        onClick={() => handleOpenModal(mission)}
-                      >
-                        Cek Detail
-                      </span>
-
-                      <div className="mt-4">
-                        <hr />
-                      </div>
-
-                      <div className="text-[9px] fontMon opacity-50 tracking-wider mt-2">
-                        Progress: {mission.progressText}
-                      </div>
-
-                      <div className="flex justify-between items-center mt-2">
-                        <ProgressBarMileStone
-                          currentValue={mission.currentValue}
-                          maxValue={mission.maxValue}
-                          milestones={mission.milestones}
-                          milestonesDetail={mission.milestonesDetail}
-                        />
-                      </div>
-
-                      <span className="text-[10px] fontMon text-center tracking-wider opacity-50">
-                        {(() => {
-                          const endDate = parseIndoDate(mission.endDate);
-                          endDate.setHours(23, 59, 59, 999);
-
-                          return endDate > new Date()
-                            ? `Berakhir pada ${mission.endDate}`
-                            : "Misi telah berakhir";
-                        })()}
-                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ));
+          );
+        });
       })()}
 
       {/* Modal Detail */}
@@ -303,12 +329,31 @@ export default function Page() {
                                 </p>
                               )
                             ) : null}
+
+                            {/* stock claim */}
+                            <p className="text-[10px]">
+                              Stock: {milestone.sisaClaim}
+                            </p>
                           </>
                         )}
                       </div>
 
                       {/* button klaim */}
-                      {milestone.milClaimDate ? (
+                      {milestone.milClaimDate === "" &&
+                      !claimedMilestones.includes(milestone.idMil) ? (
+                        milestone.milClaimStatus === "complete" &&
+                        canClaimByStock(milestone.sisaClaim) && (
+                          <button
+                            className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
+                            onClick={() => handleClaimMilestone(milestone)}
+                            disabled={isLoading === milestone.idMil}
+                          >
+                            {isLoading === milestone.idMil
+                              ? "Klaiming..."
+                              : "Klaim"}
+                          </button>
+                        )
+                      ) : (
                         <>
                           {milestone.RewardCategory === "Voucher" ? (
                             <Link
@@ -327,20 +372,9 @@ export default function Page() {
                             </Link>
                           )}
                         </>
-                      ) : (
-                        milestone.milClaimStatus === "complete" &&
-                        new Date() <= claimDeadline && (
-                          <button
-                            className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
-                            onClick={() => handleClaimMilestone(milestone)}
-                            disabled={isLoading}
-                          >
-                            Klaim
-                          </button>
-                        )
                       )}
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>

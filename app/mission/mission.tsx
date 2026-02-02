@@ -13,6 +13,7 @@ import axios from "axios";
 import SuccessMessage from "@/components/SuccessMessage";
 import { useRouter } from "next/navigation";
 import { formatDate, parseIndoDate } from "@/utils/formatMission";
+import getMissionStock from "@/utils/getMissionStock";
 
 type Mission = {
   id: number;
@@ -41,6 +42,7 @@ type Milestone = {
   milReward: string;
   milCurrentValue: number;
   RewardCategory: string;
+  sisaClaim: number | string | null;
 };
 
 export default function Mission({
@@ -77,7 +79,7 @@ export default function Mission({
   }, [isModalOpen]);
 
   const handleOpenModal = (
-    mission: (Mission & { milestonesDetail: Milestone[] }) | null
+    mission: (Mission & { milestonesDetail: Milestone[] }) | null,
   ) => {
     setSelectedMission(mission);
     setIsModalOpen(true);
@@ -97,14 +99,14 @@ export default function Mission({
         `${
           process.env.NEXT_PUBLIC_API_URL
         }mission/join?memberID=${localStorage.getItem(
-          "member"
+          "member",
         )}&missionID=${missionId}`,
         null,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.responseCode === "2002500") {
@@ -133,14 +135,14 @@ export default function Mission({
         `${
           process.env.NEXT_PUBLIC_API_URL
         }mission/milestone/claim?memberID=${localStorage.getItem(
-          "member"
+          "member",
         )}&missionID=${selectedMission?.id}&milestoneID=${milestone.idMil}`,
         null,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.responseCode === "2002500") {
@@ -157,6 +159,12 @@ export default function Mission({
     } finally {
       setIsLoading(null); // reset loading supaya tombol bisa diklik lagi
     }
+  };
+
+  const canClaimByStock = (sisaClaim: string | number) => {
+    if (sisaClaim === "-") return true;
+    const stock = Number(sisaClaim);
+    return Number.isFinite(stock) && stock > 0;
   };
 
   if (!data) {
@@ -193,85 +201,102 @@ export default function Mission({
           );
         }
 
-        return activeMissions.map((mission) => (
-          <div key={mission.id} className="px-4 pt-4">
-            <div className="bg-white w-full rounded-lg flex flex-col justify-between shadow-lg overflow-auto">
-              <div className="flex justify-between items-center">
-                <div className="flex flex-col w-full">
-                  <Image
-                    src={`https://web.amscorp.id:3060/imagestorage/mission/${mission.imageUrl}`}
-                    alt="mission"
-                    width={600}
-                    height={400}
-                    className="w-full max-h-52 object-cover bg-slate-400"
-                  />
-                  <div className="p-4">
-                    <div className="flex flex-col">
-                      <div className="mb-4">
-                        <span className="text-[10px] fontMon mb-4 text-amber-800 tracking-wider rounded-md bg-amber-50 p-2 border border-amber-200">
-                          {mission.brand.toUpperCase()}
+        return activeMissions.map((mission) => {
+          const stock = getMissionStock(mission.milestonesDetail);
+          return (
+            <div key={mission.id} className="px-4 pt-4">
+              <div className="bg-white w-full rounded-lg flex flex-col justify-between shadow-lg overflow-auto">
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col w-full">
+                    <Image
+                      src={`https://web.amscorp.id:3060/imagestorage/mission/${mission.imageUrl}`}
+                      alt="mission"
+                      width={600}
+                      height={400}
+                      className="w-full max-h-52 object-cover bg-slate-400"
+                    />
+                    <div className="p-4">
+                      <div className="flex flex-col">
+                        <div className="mb-4">
+                          <span className="text-[10px] fontMon mb-4 text-amber-800 tracking-wider rounded-md bg-amber-50 p-2 border border-amber-200">
+                            {mission.brand.toUpperCase()}
+                          </span>
+                        </div>
+
+                        <span className="text-lg mb-1">{mission.title}</span>
+                        <span className="text-xs fontMon text-gray-600 mb-3">
+                          {mission.description}
                         </span>
-                      </div>
 
-                      <span className="text-lg mb-1">{mission.title}</span>
-                      <span className="text-xs fontMon text-gray-600 mb-3">
-                        {mission.description}
-                      </span>
+                        <div className="flex justify-between mt-4">
+                          <span
+                            className="text-[10px] underline cursor-pointer opacity-50"
+                            onClick={() => handleOpenModal(mission)}
+                          >
+                            Cek Detail
+                          </span>
 
-                      <span
-                        className="text-[10px] opacity-50 fontMon tracking-wider mt-4 cursor-pointer underline"
-                        onClick={() => handleOpenModal(mission)}
-                      >
-                        Cek Detail
-                      </span>
+                          {stock.type === "number" && (
+                            <span className="text-[10px] opacity-50">
+                              Stok: {stock.value}
+                            </span>
+                          )}
 
-                      <div className="mt-4">
-                        <hr />
-                      </div>
+                          {stock.type === "infinity" && (
+                            <span className="text-[10px] opacity-50 flex items-center gap-1">
+                              Stok: &#8734;
+                            </span>
+                          )}
+                        </div>
 
-                      <div className="text-[9px] fontMon opacity-50 tracking-wider mt-2">
-                        Progress: {mission.progressText}
-                      </div>
+                        <div className="mt-4">
+                          <hr />
+                        </div>
 
-                      <div className="flex justify-between items-center mt-2">
-                        <ProgressBarMileStone
-                          currentValue={mission.currentValue}
-                          maxValue={mission.maxValue}
-                          milestones={mission.milestones}
-                          milestonesDetail={mission.milestonesDetail}
-                        />
-                      </div>
+                        <div className="text-[9px] fontMon opacity-50 tracking-wider mt-2">
+                          Progress: {mission.progressText}
+                        </div>
 
-                      {mission.statusMission === "" && (
-                        <div className="flex justify-center py-5">
-                          <Button
-                            label={
-                              loadingId === mission.id ? "Joining..." : "JOIN"
-                            }
-                            className="bg-base-accent text-white"
-                            onClick={() => handleJoinMission(mission.id)}
-                            disabled={loadingId === mission.id}
+                        <div className="flex justify-between items-center mt-2">
+                          <ProgressBarMileStone
+                            currentValue={mission.currentValue}
+                            maxValue={mission.maxValue}
+                            milestones={mission.milestones}
+                            milestonesDetail={mission.milestonesDetail}
                           />
                         </div>
-                      )}
 
-                      <span className="text-[10px] fontMon text-center tracking-wider opacity-50">
-                        {(() => {
-                          const endDate = parseIndoDate(mission.endDate);
-                          endDate.setHours(23, 59, 59, 999);
+                        {mission.statusMission === "" && (
+                          <div className="flex justify-center py-5">
+                            <Button
+                              label={
+                                loadingId === mission.id ? "Joining..." : "JOIN"
+                              }
+                              className="bg-base-accent text-white"
+                              onClick={() => handleJoinMission(mission.id)}
+                              disabled={loadingId === mission.id}
+                            />
+                          </div>
+                        )}
 
-                          return endDate > new Date()
-                            ? `Berakhir pada ${mission.endDate}`
-                            : "Misi telah berakhir";
-                        })()}
-                      </span>
+                        <span className="text-[10px] fontMon text-center tracking-wider opacity-50">
+                          {(() => {
+                            const endDate = parseIndoDate(mission.endDate);
+                            endDate.setHours(23, 59, 59, 999);
+
+                            return endDate > new Date()
+                              ? `Berakhir pada ${mission.endDate}`
+                              : "Misi telah berakhir";
+                          })()}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ));
+          );
+        });
       })()}
 
       {/* Modal Detail */}
@@ -347,6 +372,7 @@ export default function Mission({
                                 {formatDate(milestone.milClaimDate || "")}
                               </p>
                             )}
+
                             {/* Status klaim */}
                             {milestone.milClaimDate === "" ? (
                               new Date() > claimDeadline ? (
@@ -360,6 +386,11 @@ export default function Mission({
                                 </p>
                               )
                             ) : null}
+
+                            {/* stock claim */}
+                            <p className="text-[10px]">
+                              Stock: {milestone.sisaClaim}
+                            </p>
                           </>
                         )}
                       </div>
@@ -367,7 +398,8 @@ export default function Mission({
                       {/* button klaim */}
                       {milestone.milClaimDate === "" &&
                       !claimedMilestones.includes(milestone.idMil) ? (
-                        milestone.milClaimStatus === "complete" && (
+                        milestone.milClaimStatus === "complete" &&
+                        canClaimByStock(milestone.sisaClaim) && (
                           <button
                             className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
                             onClick={() => handleClaimMilestone(milestone)}
@@ -399,7 +431,7 @@ export default function Mission({
                         </>
                       )}
                     </div>
-                  )
+                  ),
                 )}
               </div>
             </div>
