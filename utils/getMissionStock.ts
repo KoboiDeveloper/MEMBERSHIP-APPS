@@ -1,3 +1,5 @@
+import { Milestone } from "@/types/mission";
+
 const getLatestMilestone = (milestones: Milestone[]) => {
   const today = new Date();
 

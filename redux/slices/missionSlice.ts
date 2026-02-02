@@ -1,39 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getMission } from "../thunks/missionThunks";
-
-type Mission = {
-    id: number;
-    title: string;
-    category: string;
-    brand: string;
-    description: string;
-    currentValue: number;
-    maxValue: number;
-    milestones: number;
-    imageUrl: string;
-    startDate: string;
-    endDate: string;
-    progressText: string;
-    statusMission: string;
-    milestonesDetail: Milestone[];
-}
-type Milestone = {
-    idMil: number;
-    milDesc: string;
-    milValue: number;
-    milClaimStatus: string;
-    milClaimDate: string | null;
-    milPassDate: string | null;
-    milReward: string;
-    milCurrentValue: number;
-    RewardCategory: string;
-}
+import { Mission } from "@/types/mission";
 
 interface MissionState {
   loading: boolean;
   error: string | null;
   data: {
-    missionsData : Mission[]; // Sesuaikan tipe data data sesuai dengan struktur respons API
+    missionsData: Mission[]; // Sesuaikan tipe data data sesuai dengan struktur respons API
   };
 }
 

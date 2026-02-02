@@ -13,36 +13,7 @@ import SuccessMessage from "@/components/SuccessMessage";
 import { useRouter } from "next/navigation";
 import { formatDate, parseIndoDate } from "@/utils/formatMission";
 import getMissionStock from "@/utils/getMissionStock";
-
-type Mission = {
-  id: number;
-  title: string;
-  category: string;
-  brand: string;
-  description: string;
-  currentValue: number;
-  maxValue: number;
-  milestones: number;
-  imageUrl: string;
-  startDate: string;
-  endDate: string;
-  progressText: string;
-  statusMission: string;
-  milestonesDetail: Milestone[];
-};
-
-type Milestone = {
-  idMil: number;
-  milDesc: string;
-  milValue: number;
-  milClaimStatus: string;
-  milClaimDate: string | null;
-  milPassDate: string | null;
-  milReward: string;
-  milCurrentValue: number;
-  RewardCategory: string;
-  sisaClaim: number | string | null;
-};
+import type { Mission, Milestone } from "@/types/mission";
 
 export default function Page() {
   const router = useRouter();
@@ -51,7 +22,7 @@ export default function Page() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [successMessageClaim, setSuccessMessageClaim] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<number | null>(null);
   const [claimedMilestones, setClaimedMilestones] = useState<number[]>([]);
 
   useEffect(() => {
@@ -72,9 +43,7 @@ export default function Page() {
     }
   }, [isModalOpen]);
 
-  const handleOpenModal = (
-    mission: (Mission & { milestonesDetail: Milestone[] }) | null,
-  ) => {
+  const handleOpenModal = (mission: Mission | null) => {
     setSelectedMission(mission);
     setIsModalOpen(true);
   };
@@ -86,7 +55,7 @@ export default function Page() {
 
   // Handle milestone claim
   const handleClaimMilestone = async (milestone: Milestone) => {
-    setIsLoading(true);
+    setIsLoading(milestone.idMil);
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
@@ -119,11 +88,11 @@ export default function Page() {
     } catch (error) {
       console.error("Error claiming milestone:", error);
     } finally {
-      setIsLoading(false);
+      setIsLoading(null);
     }
   };
 
-  const canClaimByStock = (sisaClaim: string | number) => {
+  const canClaimByStock = (sisaClaim: string | number | null) => {
     if (sisaClaim === "-") return true;
     const stock = Number(sisaClaim);
     return Number.isFinite(stock) && stock > 0;
@@ -331,9 +300,20 @@ export default function Page() {
                             ) : null}
 
                             {/* stock claim */}
-                            <p className="text-[10px]">
-                              Stock: {milestone.sisaClaim}
-                            </p>
+                            {milestone.sisaClaim !== null && (
+                              <p className="text-[10px] flex items-center gap-1">
+                                Stock:
+                                {milestone.sisaClaim === "-" ? (
+                                  <span className="flex items-center gap-1">
+                                    <span className="text-base-accent font-bold">
+                                      &#8734;
+                                    </span>
+                                  </span>
+                                ) : (
+                                  <span>{milestone.sisaClaim}</span>
+                                )}
+                              </p>
+                            )}
                           </>
                         )}
                       </div>
