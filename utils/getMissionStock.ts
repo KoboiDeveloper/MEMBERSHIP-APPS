@@ -1,19 +1,29 @@
 import { Milestone } from "@/types/mission";
 
-const getLatestMilestone = (milestones: Milestone[]) => {
+const getLatestMilestone = (milestones?: Milestone[]) => {
+  if (!Array.isArray(milestones) || milestones.length === 0) {
+    return undefined;
+  }
+
   const today = new Date();
 
-  return milestones
+  const passed = milestones
     .filter((m) => m.milPassDate && new Date(m.milPassDate) <= today)
     .sort((a, b) => {
       const dateDiff =
         new Date(b.milPassDate!).getTime() - new Date(a.milPassDate!).getTime();
 
       if (dateDiff !== 0) return dateDiff;
-
-      // tanggal sama → ambil yang paling akhir
       return b.idMil - a.idMil;
-    })[0];
+    });
+
+  // ✅ kalau ada yang sudah pass, pakai itu
+  if (passed.length > 0) {
+    return passed[0];
+  }
+
+  // ✅ kalau belum ada yang pass, pakai milestone terakhir (id terbesar)
+  return [...milestones].sort((a, b) => b.idMil - a.idMil)[0];
 };
 
 type StockResult =
