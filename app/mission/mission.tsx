@@ -197,13 +197,21 @@ export default function Mission({
                           {mission.description}
                         </span>
 
-                        <div className="flex justify-between mt-4">
-                          <span
-                            className="text-[10px] underline cursor-pointer opacity-50"
-                            onClick={() => handleOpenModal(mission)}
-                          >
-                            Cek Detail
-                          </span>
+                        <span
+                          className="text-[10px] underline cursor-pointer opacity-50"
+                          onClick={() => handleOpenModal(mission)}
+                        >
+                          Cek Detail
+                        </span>
+
+                        <div className="mt-4">
+                          <hr />
+                        </div>
+
+                        <div className="flex justify-between items-center mt-2">
+                          <div className="text-[9px] fontMon opacity-50 tracking-wider">
+                            Progress: {mission.progressText}
+                          </div>
 
                           {stock.type === "number" && (
                             <span className="text-[10px] opacity-50">
@@ -218,15 +226,7 @@ export default function Mission({
                           )}
                         </div>
 
-                        <div className="mt-4">
-                          <hr />
-                        </div>
-
-                        <div className="text-[9px] fontMon opacity-50 tracking-wider mt-2">
-                          Progress: {mission.progressText}
-                        </div>
-
-                        <div className="flex justify-between items-center mt-2">
+                        <div className="flex justify-between items-center mt-1">
                           <ProgressBarMileStone
                             currentValue={mission.currentValue}
                             maxValue={mission.maxValue}
