@@ -21,9 +21,9 @@ export default function Auth() {
   };
 
   // handle untuk redirect ke halaman validasi
-  const handleValidasi = () => {
-    router.push("/validasi");
-  };
+  // const handleValidasi = () => {
+  //   router.push("/validasi");
+  // };
 
   return (
     <>
