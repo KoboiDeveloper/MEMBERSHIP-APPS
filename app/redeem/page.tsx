@@ -54,12 +54,14 @@ export default function Redeem() {
   const [selectedVoucher, setSelectedVoucher] = useState<string | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [voucherRedeem, setVoucherRedeem] = useState<VoucherRedeem | null>(
-    null
+    null,
   );
   const [errorMessageRedeemPoint, setErrorMessageRedeemPoint] = useState(false);
   const [errorMessageRedeemBatas, setErrorMessageRedeemBatas] = useState(false);
   const [errorMessage, setErrorMessage] = useState(false);
   const [menu, setMenu] = useState<"voucher" | "special">("voucher");
+
+  const [isModalMessage, setIsModalMessage] = useState(false);
 
   const [redeem, setRedeem] = useState<Redeem>({
     memberID: "",
@@ -92,7 +94,7 @@ export default function Redeem() {
   const renderMenuContent = () => {
     if (menu === "voucher") {
       const filterData = data.filter(
-        (item: Voucher) => item.category === "VCR"
+        (item: Voucher) => item.category === "VCR",
       );
       return (
         <Vouchers
@@ -110,7 +112,7 @@ export default function Redeem() {
     }
     if (menu === "special") {
       const filterData = data.filter(
-        (item: Voucher) => item.category === "VCRSPCL"
+        (item: Voucher) => item.category === "VCRSPCL",
       );
       return (
         <Special
@@ -158,7 +160,7 @@ export default function Redeem() {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (response.data.responseCode === "2002500") {
@@ -170,6 +172,9 @@ export default function Redeem() {
           setPinErrorMessage("PIN yang Anda masukkan salah.");
           setIsPinModalVisible(true);
           return;
+        } else if (response.data.responseCode === "4294291") {
+          setIsModalMessage(true);
+          setTimeout(() => setIsModalMessage(false), 3000);
         } else {
           setErrorMessageRedeemPoint(true);
           setIsPinModalVisible(false);
@@ -188,7 +193,7 @@ export default function Redeem() {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (response.data.responseCode === "2002500") {
@@ -200,6 +205,9 @@ export default function Redeem() {
           setPinErrorMessage("PIN yang Anda masukkan salah.");
           setIsPinModalVisible(true);
           return;
+        } else if (response.data.responseCode === "4294291") {
+          setIsModalMessage(true);
+          setTimeout(() => setIsModalMessage(false), 3000);
         } else {
           setErrorMessageRedeemPoint(true);
           setIsPinModalVisible(false);
@@ -246,6 +254,23 @@ export default function Redeem() {
   }
 
   if (error) return <p>Error: {error}</p>;
+
+  if (isModalMessage) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+        <div className="flex w-72 flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-xl">
+          <h2 className="text-center text-lg font-semibold text-gray-900">
+            Permintaan Terlalu Cepat
+          </h2>
+
+          <p className="text-center text-sm text-gray-500">
+            Anda melakukan permintaan terlalu cepat. Silakan coba kembali
+            beberapa saat lagi.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center items-center">
@@ -449,9 +474,9 @@ export default function Redeem() {
                 <div className="flex justify-end items-center">
                   <button
                     onClick={() => {
-                      setIsPinModalVisible(false),
+                      (setIsPinModalVisible(false),
                         setPinErrorMessage(""),
-                        setPin("");
+                        setPin(""));
                     }}
                     className="text-black"
                   >

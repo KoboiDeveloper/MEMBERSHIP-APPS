@@ -54,7 +54,7 @@ export default function Auth() {
 
               <hr className="w-full border-gray-300 my-4" />
 
-              <p className="text-[9px] text-center fontMon">
+              {/* <p className="text-[9px] text-center fontMon">
                 Member yang sudah terdaftar
               </p>
 
@@ -62,7 +62,7 @@ export default function Auth() {
                 label="VALIDASI MEMBER"
                 className="bg-gray-300 text-base-accent"
                 onClick={handleValidasi}
-              />
+              /> */}
             </div>
 
             <AllBrands />

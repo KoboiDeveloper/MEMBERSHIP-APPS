@@ -31,6 +31,8 @@ export default function Mission({
   const [isLoading, setIsLoading] = useState<number | null>(null);
   const [claimedMilestones, setClaimedMilestones] = useState<number[]>([]);
 
+  const [isModalMessage, setIsModalMessage] = useState(false);
+
   useEffect(() => {
     const member = localStorage.getItem("member");
     const token = localStorage.getItem("token");
@@ -65,11 +67,7 @@ export default function Mission({
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${
-          process.env.NEXT_PUBLIC_API_URL
-        }mission/join?memberID=${localStorage.getItem(
-          "member",
-        )}&missionID=${missionId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}mission/join?memberID=${localStorage.getItem("member")}&missionID=${missionId}`,
         null,
         {
           headers: {
@@ -83,7 +81,11 @@ export default function Mission({
         setTimeout(() => setSuccessMessageJoin(false), 3000);
         setIsModalOpen(false);
         dispatch(getMission());
+      } else if (response.data.responseCode === "4294291") {
+        setIsModalMessage(true);
+        setTimeout(() => setIsModalMessage(false), 3000);
       } else {
+        alert("Gagal join mission, silakan coba lagi.");
         console.error("Failed to join mission:", response.data);
       }
     } catch (error) {
@@ -147,6 +149,23 @@ export default function Mission({
 
   if (error) {
     return <div>Error: {error}</div>;
+  }
+
+  if (isModalMessage) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+        <div className="flex w-72 flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-xl">
+          <h2 className="text-center text-lg font-semibold text-gray-900">
+            Permintaan Terlalu Cepat
+          </h2>
+
+          <p className="text-center text-sm text-gray-500">
+            Anda melakukan permintaan terlalu cepat. Silakan coba kembali
+            beberapa saat lagi.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const endDate = parseIndoDate(selectedMission?.endDate || "");
