@@ -1,0 +1,40 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            # Masuk ke direktori project di server
+            cd /home/gibran/membership/src/
+
+            # Tarik source code terbaru
+            git pull origin main
+
+            # Kembali ke halaman root project
+            cd ..
+
+            # Build ulang & jalankan container (tanpa down, agar service lain tetap jalan)
+            # Compose otomatis hanya recreate container yang konfignya berubah
+            docker compose up -d --build
+
+            # Bersihkan image, container, network, cache yang tidak terpakai
+            docker system prune -af
