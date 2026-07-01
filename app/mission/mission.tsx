@@ -81,15 +81,20 @@ export default function Mission({
         setTimeout(() => setSuccessMessageJoin(false), 3000);
         setIsModalOpen(false);
         dispatch(getMission());
-      } else if (response.data.responseCode == "4294291") {
-        setIsModalMessage(true);
-        setTimeout(() => setIsModalMessage(false), 3000);
       } else {
         alert("Gagal join mission, silakan coba lagi.");
         console.error("Failed to join mission:", response.data);
       }
     } catch (error) {
       console.error("Error joining mission:", error);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 429) {
+          setIsModalMessage(true);
+          setTimeout(() => setIsModalMessage(false), 3000);
+        } else {
+          alert("Terjadi kesalahan saat join mission.");
+        }
+      }
     } finally {
       setLoadingId(null); // reset loadingId setelah request selesai
     }
@@ -156,11 +161,11 @@ export default function Mission({
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
         <div className="flex w-72 flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-xl">
           <h2 className="text-center text-lg font-semibold text-gray-900">
-            Permintaan Terlalu Cepat
+            Permintaan Terlalu Banyak
           </h2>
 
           <p className="text-center text-sm text-gray-500">
-            Anda melakukan permintaan terlalu cepat. Silakan coba kembali
+            Anda melakukan permintaan terlalu banyak. Silakan coba kembali
             beberapa saat lagi.
           </p>
         </div>

@@ -95,18 +95,23 @@ export default function Login() {
         }
       } else if (response.data.responseCode === "4002503") {
         setGlobalError(
-          "Akun anda terkunci, Silakan akses fitur 'Lupa Password'",
-        );
-      } else if (response.data.responseCode == "4294292") {
-        setGlobalError(
-          "Terlalu banyak percobaan login, Silakan coba beberapa saat lagi.",
+          "Login gagal. Anda terlalu banyak mencoba, silakan coba lagi beberapa saat.",
         );
       } else {
         setGlobalError("No Telepon atau Password Salah");
       }
     } catch (error) {
-      console.error(error);
-      setGlobalError("Terjadi kesalahan, coba lagi nanti.");
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 429) {
+          setGlobalError(
+            "Terlalu banyak permintaan. Silakan coba lagi beberapa saat.",
+          );
+        } else {
+          setGlobalError("Terjadi kesalahan, coba lagi nanti.");
+        }
+      } else {
+        setGlobalError("Terjadi kesalahan, coba lagi nanti.");
+      }
     } finally {
       setData({ user: "", password: "", loading: false });
     }

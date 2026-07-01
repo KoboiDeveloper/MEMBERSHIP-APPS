@@ -206,12 +206,6 @@ export default function Redeem() {
           setPinErrorMessage("PIN yang Anda masukkan salah.");
           setIsPinModalVisible(true);
           return;
-        } else if (response.data.responseCode == "4294291") {
-          setPinErrorMessage(
-            "Anda melakukan permintaan terlalu cepat. Silakan coba kembali beberapa saat lagi.",
-          );
-          setIsPinModalVisible(true);
-          return;
         } else {
           setErrorMessageRedeemPoint(true);
           setIsPinModalVisible(false);
@@ -219,6 +213,17 @@ export default function Redeem() {
       }
     } catch (error) {
       console.error(error);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 429) {
+          setPinErrorMessage(
+            "Anda melakukan permintaan terlalu cepat. Silakan coba kembali beberapa saat lagi.",
+          );
+          setIsPinModalVisible(true);
+          return;
+        } else {
+          setPinErrorMessage("Terjadi kesalahan, coba lagi nanti.");
+        }
+      }
     } finally {
       setIsLoading(false);
       setPin("");
