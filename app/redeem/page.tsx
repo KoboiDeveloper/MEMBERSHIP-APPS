@@ -110,7 +110,8 @@ export default function Redeem() {
     }
     if (menu === "special") {
       const filterData = data.filter(
-        (item: Voucher) => item.category === "VCRSPCL",
+        (item: Voucher) =>
+          item.category === "VCRSPCL" && item.status_Voucher === "enabled",
       );
       return (
         <Special

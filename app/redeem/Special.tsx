@@ -70,7 +70,7 @@ const Special: FC<Voucher> = ({
         <Button
           label="Tukar Poin"
           type="submit"
-          className="bg-base-accent text-white"
+          className={`bg-base-accent text-white ${isLoading || !selectedVoucher ? "opacity-50 cursor-not-allowed" : ""}`}
           loading={isLoading}
           disabled={isLoading || !selectedVoucher}
         />

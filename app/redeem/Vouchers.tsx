@@ -60,8 +60,8 @@ const Vouchers: FC<Voucher> = ({
                 selectedVoucher === voucher.voucherCode
                   ? "bg-gray-300"
                   : isDisabled
-                  ? "bg-gray-200 cursor-not-allowed"
-                  : "hover:bg-gray-100"
+                    ? "bg-gray-200 cursor-not-allowed"
+                    : "hover:bg-gray-100"
               }`}
               onClick={() =>
                 !isDisabled && handleSelectVoucher(voucher.voucherCode)
@@ -114,7 +114,7 @@ const Vouchers: FC<Voucher> = ({
         <Button
           label="Tukar Poin"
           type="submit"
-          className="bg-base-accent text-white"
+          className={`bg-base-accent text-white ${isLoading || !selectedVoucher ? "opacity-50 cursor-not-allowed" : ""}`}
           loading={isLoading}
           disabled={isLoading || !selectedVoucher}
         />
