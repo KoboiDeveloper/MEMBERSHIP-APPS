@@ -77,7 +77,7 @@ export default function Login() {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}dashboard/login`,
         data,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
 
       if (response.data.responseCode === "2002500") {
@@ -86,7 +86,7 @@ export default function Login() {
         router.replace("/home");
       } else if (response.data.responseCode === "4002501") {
         const responseVerify = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}dashboard/Verify?userAccount=${data.user}`
+          `${process.env.NEXT_PUBLIC_API_URL}dashboard/Verify?userAccount=${data.user}`,
         );
 
         if (responseVerify.data.responseCode === "2002500") {
@@ -95,7 +95,11 @@ export default function Login() {
         }
       } else if (response.data.responseCode === "4002503") {
         setGlobalError(
-          "Akun anda terkunci, Silakan akses fitur 'Lupa Password'"
+          "Akun anda terkunci, Silakan akses fitur 'Lupa Password'",
+        );
+      } else if (response.data.responseCode == "4294292") {
+        setGlobalError(
+          "Terlalu banyak percobaan login, Silakan coba beberapa saat lagi.",
         );
       } else {
         setGlobalError("No Telepon atau Password Salah");

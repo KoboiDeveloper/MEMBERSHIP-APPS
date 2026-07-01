@@ -81,7 +81,7 @@ export default function Mission({
         setTimeout(() => setSuccessMessageJoin(false), 3000);
         setIsModalOpen(false);
         dispatch(getMission());
-      } else if (response.data.responseCode === "4294291") {
+      } else if (response.data.responseCode == "4294291") {
         setIsModalMessage(true);
         setTimeout(() => setIsModalMessage(false), 3000);
       } else {

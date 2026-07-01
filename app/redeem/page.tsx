@@ -61,8 +61,6 @@ export default function Redeem() {
   const [errorMessage, setErrorMessage] = useState(false);
   const [menu, setMenu] = useState<"voucher" | "special">("voucher");
 
-  const [isModalMessage, setIsModalMessage] = useState(false);
-
   const [redeem, setRedeem] = useState<Redeem>({
     memberID: "",
     voucher_code: "",
@@ -172,9 +170,12 @@ export default function Redeem() {
           setPinErrorMessage("PIN yang Anda masukkan salah.");
           setIsPinModalVisible(true);
           return;
-        } else if (response.data.responseCode === "4294291") {
-          setIsModalMessage(true);
-          setTimeout(() => setIsModalMessage(false), 3000);
+        } else if (response.data.responseCode == "4294291") {
+          setPinErrorMessage(
+            "Anda melakukan permintaan terlalu cepat. Silakan coba kembali beberapa saat lagi.",
+          );
+          setIsPinModalVisible(true);
+          return;
         } else {
           setErrorMessageRedeemPoint(true);
           setIsPinModalVisible(false);
@@ -205,9 +206,12 @@ export default function Redeem() {
           setPinErrorMessage("PIN yang Anda masukkan salah.");
           setIsPinModalVisible(true);
           return;
-        } else if (response.data.responseCode === "4294291") {
-          setIsModalMessage(true);
-          setTimeout(() => setIsModalMessage(false), 3000);
+        } else if (response.data.responseCode == "4294291") {
+          setPinErrorMessage(
+            "Anda melakukan permintaan terlalu cepat. Silakan coba kembali beberapa saat lagi.",
+          );
+          setIsPinModalVisible(true);
+          return;
         } else {
           setErrorMessageRedeemPoint(true);
           setIsPinModalVisible(false);
@@ -254,23 +258,6 @@ export default function Redeem() {
   }
 
   if (error) return <p>Error: {error}</p>;
-
-  if (isModalMessage) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-        <div className="flex w-72 flex-col items-center gap-3 rounded-xl bg-white p-6 shadow-xl">
-          <h2 className="text-center text-lg font-semibold text-gray-900">
-            Permintaan Terlalu Cepat
-          </h2>
-
-          <p className="text-center text-sm text-gray-500">
-            Anda melakukan permintaan terlalu cepat. Silakan coba kembali
-            beberapa saat lagi.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex justify-center items-center">
