@@ -271,13 +271,14 @@ export default function Redeem() {
   return (
     <div className="flex justify-center items-center">
       <div className="flex flex-col items-center w-full max-w-md bg-white md:rounded-lg min-h-screen">
-        {errorPosTransaction && (
-          <div className="bg-green-600 w-full text-center py-2 sticky">
-            <p className="text-[10px] text-white fontMon">
-              Anda sedang melakukan transaksi di POS
-            </p>
-          </div>
-        )}
+        {errorPosTransaction ||
+          (user?.memberInfoData.pos_transaction === true && (
+            <div className="bg-green-600 w-full text-center py-2 sticky">
+              <p className="text-[10px] text-white fontMon">
+                Anda sedang melakukan transaksi di POS
+              </p>
+            </div>
+          ))}
         <div className="flex flex-col m-8 w-full">
           <div className="flex flex-col px-8">
             {/* Header */}
