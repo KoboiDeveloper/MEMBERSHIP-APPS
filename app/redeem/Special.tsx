@@ -20,6 +20,7 @@ type Voucher = {
   selectedVoucher: string | null;
   isLoading: boolean;
   data: VoucherData[];
+  dataUser: any;
 };
 
 const Special: FC<Voucher> = ({
@@ -28,6 +29,7 @@ const Special: FC<Voucher> = ({
   selectedVoucher,
   isLoading,
   data,
+  dataUser,
 }) => {
   return (
     <form onSubmit={handleSubmit} className="w-full mt-4">
@@ -67,13 +69,19 @@ const Special: FC<Voucher> = ({
       </div>
 
       <div className="mt-8 flex justify-center">
-        <Button
-          label="Tukar Poin"
-          type="submit"
-          className={`bg-base-accent text-white ${isLoading || !selectedVoucher ? "opacity-50 cursor-not-allowed" : ""}`}
-          loading={isLoading}
-          disabled={isLoading || !selectedVoucher}
-        />
+        {data.length > 0 && (
+          <Button
+            label="Tukar Poin"
+            type="submit"
+            className={`bg-base-accent text-white ${isLoading || !selectedVoucher || dataUser.memberInfoData.pos_transaction === true ? "opacity-50 cursor-not-allowed" : ""}`}
+            loading={isLoading}
+            disabled={
+              isLoading ||
+              !selectedVoucher ||
+              dataUser.memberInfoData.pos_transaction === true
+            }
+          />
+        )}
       </div>
     </form>
   );

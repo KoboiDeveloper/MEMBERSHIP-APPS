@@ -56,9 +56,7 @@ export default function Redeem() {
   const [voucherRedeem, setVoucherRedeem] = useState<VoucherRedeem | null>(
     null,
   );
-  const [errorMessageRedeemPoint, setErrorMessageRedeemPoint] = useState(false);
-  const [errorMessageRedeemBatas, setErrorMessageRedeemBatas] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(false);
+  const [errorPosTransaction, setErrorPosTransaction] = useState(false);
   const [menu, setMenu] = useState<"voucher" | "special">("voucher");
 
   const [redeem, setRedeem] = useState<Redeem>({
@@ -70,6 +68,13 @@ export default function Redeem() {
   const [isPinModalVisible, setIsPinModalVisible] = useState(false);
   const [pin, setPin] = useState("");
   const [pinErrorMessage, setPinErrorMessage] = useState<string | null>(null);
+
+  const specialData = data.filter(
+    (item: Voucher) =>
+      item.category === "VCRSPCL" && item.status_Voucher === "enabled",
+  );
+
+  const voucherData = data.filter((item: Voucher) => item.category === "VCR");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -91,35 +96,30 @@ export default function Redeem() {
 
   const renderMenuContent = () => {
     if (menu === "voucher") {
-      const filterData = data.filter(
-        (item: Voucher) => item.category === "VCR",
-      );
       return (
         <Vouchers
           handleSubmit={handleSubmit}
           handleSelectVoucher={handleSelectVoucher}
           isLoading={isLoading}
           selectedVoucher={selectedVoucher}
-          data={filterData}
+          data={voucherData}
           userPoints={user.memberInfoData.points}
           handleMaxPoints={handleMaxPoints}
           points={points}
           handleChange={handleChange}
+          dataUser={user}
         />
       );
     }
     if (menu === "special") {
-      const filterData = data.filter(
-        (item: Voucher) =>
-          item.category === "VCRSPCL" && item.status_Voucher === "enabled",
-      );
       return (
         <Special
           handleSubmit={handleSubmit}
           handleSelectVoucher={handleSelectVoucher}
           isLoading={isLoading}
           selectedVoucher={selectedVoucher}
-          data={filterData}
+          data={specialData}
+          dataUser={user}
         />
       );
     }
@@ -177,41 +177,44 @@ export default function Redeem() {
           );
           setIsPinModalVisible(true);
           return;
-        } else {
-          setErrorMessageRedeemPoint(true);
+        } else if (response.data.responseCode === "4002502") {
+          setErrorPosTransaction(true);
           setIsPinModalVisible(false);
-        }
-      } else {
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}voucher/redeem/custom`,
-          {
-            memberID: redeem.memberID,
-            nominal: points,
-            ip_address: redeem.ip_address,
-            pin,
-          },
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (response.data.responseCode === "2002500") {
-          setVoucherRedeem(response.data.voucherData);
-          setIsModalVisible(true);
-          setIsPinModalVisible(false);
-          dispatch(getUsers());
-        } else if (response.data.responseCode === "4002501") {
-          setPinErrorMessage("PIN yang Anda masukkan salah.");
-          setIsPinModalVisible(true);
-          return;
         } else {
-          setErrorMessageRedeemPoint(true);
           setIsPinModalVisible(false);
         }
       }
+      //  else {
+      // const response = await axios.post(
+      //   `${process.env.NEXT_PUBLIC_API_URL}voucher/redeem/custom`,
+      //   {
+      //     memberID: redeem.memberID,
+      //     nominal: points,
+      //     ip_address: redeem.ip_address,
+      //     pin,
+      //   },
+      //   {
+      //     headers: {
+      //       "Content-Type": "multipart/form-data",
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   },
+      // );
+
+      // if (response.data.responseCode === "2002500") {
+      //   setVoucherRedeem(response.data.voucherData);
+      //   setIsModalVisible(true);
+      //   setIsPinModalVisible(false);
+      //   dispatch(getUsers());
+      // } else if (response.data.responseCode === "4002501") {
+      //   setPinErrorMessage("PIN yang Anda masukkan salah.");
+      //   setIsPinModalVisible(true);
+      //   return;
+      // } else {
+      //   setErrorMessageRedeemPoint(true);
+      //   setIsPinModalVisible(false);
+      // }
+      // }
     } catch (error) {
       console.error(error);
       if (axios.isAxiosError(error)) {
@@ -268,6 +271,13 @@ export default function Redeem() {
   return (
     <div className="flex justify-center items-center">
       <div className="flex flex-col items-center w-full max-w-md bg-white md:rounded-lg min-h-screen">
+        {errorPosTransaction && (
+          <div className="bg-green-600 w-full text-center py-2 sticky">
+            <p className="text-[10px] text-white fontMon">
+              Anda sedang melakukan transaksi di POS
+            </p>
+          </div>
+        )}
         <div className="flex flex-col m-8 w-full">
           <div className="flex flex-col px-8">
             {/* Header */}
@@ -305,14 +315,6 @@ export default function Redeem() {
               </span>
             </div>
 
-            {errorMessage && <ErrorMessage message="Silahkan pilih voucher" />}
-            {errorMessageRedeemBatas && (
-              <ErrorMessage message="Anda sudah tukar voucher" />
-            )}
-            {errorMessageRedeemPoint && (
-              <ErrorMessage message="Poin anda tidak mencukupi" />
-            )}
-
             {/* Content */}
             <div className="flex flex-col justify-center text-center items-center mt-4">
               <span className="text-xs">
@@ -331,7 +333,13 @@ export default function Redeem() {
               </div>
 
               <div className="mt-10 mb-4">
-                <span className="text-xs">Nominal poin yang akan ditukar</span>
+                <span className="text-xs">
+                  {menu === "special"
+                    ? specialData.length > 0
+                      ? "Nominal poin yang akan ditukar"
+                      : "Penawaran belum tersedia"
+                    : "Nominal poin yang akan ditukar"}
+                </span>
               </div>
 
               {renderMenuContent()}
@@ -501,7 +509,9 @@ export default function Redeem() {
                     type="submit"
                     label="Submit"
                     onClick={handlePinSubmit}
-                    disabled={isLoading}
+                    disabled={
+                      isLoading || user.memberInfoData.pos_transaction === true
+                    }
                     className="bg-base-accent text-white"
                   />
                 </div>

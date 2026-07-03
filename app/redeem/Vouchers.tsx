@@ -23,6 +23,7 @@ type Voucher = {
   handleMaxPoints: () => void;
   points: string;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  dataUser: any;
 };
 
 const Vouchers: FC<Voucher> = ({
@@ -35,6 +36,7 @@ const Vouchers: FC<Voucher> = ({
   handleMaxPoints,
   points,
   handleChange,
+  dataUser,
 }) => {
   // Fungsi untuk membersihkan format IDR menjadi angka asli
   const cleanIDR = (value: string) => {
@@ -114,9 +116,13 @@ const Vouchers: FC<Voucher> = ({
         <Button
           label="Tukar Poin"
           type="submit"
-          className={`bg-base-accent text-white ${isLoading || !selectedVoucher ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={`bg-base-accent text-white ${isLoading || !selectedVoucher || dataUser.memberInfoData.pos_transaction === true ? "opacity-50 cursor-not-allowed" : ""}`}
           loading={isLoading}
-          disabled={isLoading || !selectedVoucher}
+          disabled={
+            isLoading ||
+            !selectedVoucher ||
+            dataUser.memberInfoData.pos_transaction === true
+          }
         />
       </div>
     </form>

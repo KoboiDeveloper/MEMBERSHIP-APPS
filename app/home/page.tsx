@@ -19,7 +19,6 @@ import Misi from "@/public/images/CRM-Mission.svg";
 import Lucky from "@/public/images/CRM-Lucky draw.svg";
 import Referral from "@/public/images/CRM-Referral.svg";
 import Promo from "@/public/images/CRM-Promo.svg";
-import Background from "@/public/images/ams-bg.svg";
 import { GoogleTagManager } from "@next/third-parties/google";
 
 export default function Page() {
@@ -105,8 +104,14 @@ export default function Page() {
             alt="background"
             className="absolute p-2 -right-32"
           /> */}
-            {/* notif verif email */}
-            {user.memberInfoData.emailStatus == "email not verified" ? (
+
+            {user.memberInfoData.pos_transaction === true ? (
+              <div className="bg-green-600 w-full text-center py-2 sticky">
+                <p className="text-[10px] text-white fontMon">
+                  Anda sedang melakukan transaksi di POS
+                </p>
+              </div>
+            ) : user.memberInfoData.emailStatus === "email not verified" ? (
               <div className="bg-red-600 w-full text-center py-2 sticky">
                 <p className="text-[10px] text-white fontMon">
                   Anda belum verifkasi email.{" "}
@@ -118,9 +123,8 @@ export default function Page() {
                   </Link>
                 </p>
               </div>
-            ) : (
-              <></>
-            )}
+            ) : null}
+
             <div className="flex justify-between items-center px-8 pt-8 pb-5 relative">
               <span className="text-lg text-white normal-case tracking-wide">
                 Hi, {toNormalCase(user.memberInfoData.fullName.split(" ")[0])}!

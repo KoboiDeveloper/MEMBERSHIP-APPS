@@ -10,7 +10,7 @@ interface VoucherState {
 const initialState: VoucherState = {
   loading: false,
   error: null,
-  data: null,
+  data: [],
 };
 
 const voucherSlice = createSlice({
