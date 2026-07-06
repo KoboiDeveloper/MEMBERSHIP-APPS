@@ -18,7 +18,6 @@ type UserLogin = {
 export default function Login() {
   const router = useRouter();
   const [inputError, setInputError] = useState<{ [key: string]: string }>({});
-  const [isError, setIsError] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [showPass, setShowPass] = useState(false);
   const [data, setData] = useState<UserLogin>({
@@ -49,7 +48,6 @@ export default function Login() {
       [name]: "",
     }));
     setGlobalError(null);
-    setIsError(false); // Hide error when input is valid
   };
 
   // Validate form inputs before submitting
@@ -106,8 +104,10 @@ export default function Login() {
           setGlobalError(
             "Terlalu banyak permintaan. Silakan coba lagi beberapa saat.",
           );
-        } else {
-          setGlobalError("Terjadi kesalahan, coba lagi nanti.");
+        } else if (error.response?.status === 403) {
+          setGlobalError(
+            "Login gagal. Akun Anda telah diblokir sebagai pelanggaran kebijakan.",
+          );
         }
       } else {
         setGlobalError("Terjadi kesalahan, coba lagi nanti.");
