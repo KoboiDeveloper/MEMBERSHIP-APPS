@@ -120,6 +120,7 @@ export default function Redeem() {
           selectedVoucher={selectedVoucher}
           data={specialData}
           dataUser={user}
+          userPoints={user.memberInfoData.points ?? 0}
         />
       );
     }
@@ -170,18 +171,22 @@ export default function Redeem() {
         } else if (response.data.responseCode === "4002501") {
           setPinErrorMessage("PIN yang Anda masukkan salah.");
           setIsPinModalVisible(true);
+          dispatch(getUsers());
           return;
         } else if (response.data.responseCode == "4294291") {
           setPinErrorMessage(
             "Anda melakukan permintaan terlalu cepat. Silakan coba kembali beberapa saat lagi.",
           );
           setIsPinModalVisible(true);
+          dispatch(getUsers());
           return;
         } else if (response.data.responseCode === "4002502") {
           setErrorPosTransaction(true);
           setIsPinModalVisible(false);
+          dispatch(getUsers());
         } else {
           setIsPinModalVisible(false);
+          dispatch(getUsers());
         }
       }
       //  else {
@@ -229,7 +234,6 @@ export default function Redeem() {
         }
       }
     } finally {
-      dispatch(getUsers());
       setIsLoading(false);
       setPin("");
     }
@@ -272,14 +276,14 @@ export default function Redeem() {
   return (
     <div className="flex justify-center items-center">
       <div className="flex flex-col items-center w-full max-w-md bg-white md:rounded-lg min-h-screen">
-        {errorPosTransaction ||
-          (user?.memberInfoData.pos_transaction === true && (
-            <div className="bg-green-600 w-full text-center py-2 sticky">
-              <p className="text-[10px] text-white fontMon">
-                Anda sedang melakukan transaksi di POS
-              </p>
-            </div>
-          ))}
+        {(errorPosTransaction ||
+          user?.memberInfoData?.pos_transaction === true) && (
+          <div className="bg-green-600 w-full text-center py-2 sticky">
+            <p className="text-[10px] text-white fontMon">
+              Anda sedang melakukan transaksi di POS
+            </p>
+          </div>
+        )}
         <div className="flex flex-col m-8 w-full">
           <div className="flex flex-col px-8">
             {/* Header */}
