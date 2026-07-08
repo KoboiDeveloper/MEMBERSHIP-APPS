@@ -108,7 +108,7 @@ export default function Page() {
             {user.memberInfoData.pos_transaction === true ? (
               <div className="bg-green-600 w-full text-center py-2 sticky">
                 <p className="text-[10px] text-white fontMon">
-                  Anda sedang melakukan transaksi di POS
+                  Anda sedang melakukan transaksi di Kasir
                 </p>
               </div>
             ) : user.memberInfoData.emailStatus === "email not verified" ? (
