@@ -23,6 +23,8 @@ import "swiper/css/pagination";
 
 import TabBar from "@/components/TabBar";
 import { Pagination } from "swiper/modules";
+import { useRouter } from "next/navigation";
+import { getUsers } from "@/redux/thunks/usersThunks";
 
 interface Transaction {
   id: number;
@@ -57,6 +59,7 @@ interface Tier {
 }
 
 export default function Transaction() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [detail, setDetail] = useState<Transaction | null>(null);
@@ -64,6 +67,17 @@ export default function Transaction() {
   const { error, data } = useSelector((state: RootState) => state.transaction);
   const [year, setYear] = useState<string>("");
   const [activeIndex, setActiveIndex] = useState(0);
+
+  // Memuat data user saat komponen dirender
+    useEffect(() => {
+      const member = localStorage.getItem("member");
+      const token = localStorage.getItem("token");
+      if (!member || !token) {
+        router.replace("/login"); // Redirect ke halaman login
+      } else {
+        dispatch(getUsers()); // Panggil thunk dengan token
+      }
+    }, [dispatch, router]);
 
   useEffect(() => {
     dispatch(getTransaction());

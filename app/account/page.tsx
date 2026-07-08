@@ -32,8 +32,14 @@ export default function Page() {
 
   // Memuat data user saat komponen dirender
   useEffect(() => {
-    dispatch(getUsers());
-  }, [dispatch]);
+    const member = localStorage.getItem("member");
+    const token = localStorage.getItem("token");
+    if (!member || !token) {
+      router.replace("/login"); // Redirect ke halaman login
+    } else {
+      dispatch(getUsers()); // Panggil thunk dengan token
+    }
+  }, [dispatch, router]);
 
   useEffect(() => {
     const currentYear = user?.memberInfoData.joinDate.slice(0, 4);
