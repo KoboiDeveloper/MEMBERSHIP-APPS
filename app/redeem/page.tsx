@@ -103,7 +103,7 @@ export default function Redeem() {
           isLoading={isLoading}
           selectedVoucher={selectedVoucher}
           data={voucherData}
-          userPoints={user.memberInfoData.points}
+          userPoints={user.memberInfoData.points ?? 0}
           handleMaxPoints={handleMaxPoints}
           points={points}
           handleChange={handleChange}
@@ -229,6 +229,7 @@ export default function Redeem() {
         }
       }
     } finally {
+      dispatch(getUsers());
       setIsLoading(false);
       setPin("");
     }

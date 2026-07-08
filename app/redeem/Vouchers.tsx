@@ -54,7 +54,7 @@ const Vouchers: FC<Voucher> = ({
     <form onSubmit={handleSubmit} className="w-full mt-4">
       <div className="grid grid-cols-3 gap-2">
         {data.map((voucher: VoucherData) => {
-          const isDisabled = userPoints < voucher.nominal; // Cek apakah poin kurang dari nominal voucher
+          const isDisabled = (userPoints ?? 0) < voucher.nominal; // Cek apakah poin kurang dari nominal voucher
           return (
             <div
               key={voucher.id}
