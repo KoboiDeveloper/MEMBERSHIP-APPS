@@ -9,7 +9,9 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import generateSlug from "@/utils/generateSlug";
+import PageError from "@/components/PageError";
+import { StoreBrandSkeleton } from "@/components/PageSkeletons";
 
 type Store = {
   brand: string;
@@ -33,14 +35,6 @@ export default function Store() {
   const { error, data } = useSelector((state: RootState) => state.store);
 
   // fungsi untuk membuat slug untuk brand
-  const generateSlug = (text: string) => {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "") // Hapus karakter spesial
-      .replace(/\s+/g, "-"); // Ganti spasi dengan "-"
-  };
-
   useEffect(() => {
     dispatch(getStore());
   }, [dispatch]);
@@ -49,8 +43,8 @@ export default function Store() {
     if (data?.storeLocationData.length > 0) {
       setFilteredData(
         data.storeLocationData.filter(
-          (item: Store) => generateSlug(item.brand) === params.brand
-        )
+          (item: Store) => generateSlug(item.brand) === params.brand,
+        ),
       );
     }
   }, [data?.storeLocationData]);
@@ -114,16 +108,11 @@ export default function Store() {
   };
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <StoreBrandSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   return (
@@ -138,10 +127,10 @@ export default function Store() {
               <div className="flex items-center justify-center gap-2 cursor-pointer">
                 <Image
                   src="/images/search.svg"
-                  alt="Search"
-                  width={100}
-                  height={100}
-                  className="w-auto h-auto cursor-pointer"
+                  alt="Cari"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 cursor-pointer"
                   onClick={showSearchModal}
                 />
               </div>
@@ -150,33 +139,49 @@ export default function Store() {
 
           {/* search open */}
           {isSearchModalVisible && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50">
-              <div className="bg-white w-full max-w-md shadow-lg p-4">
-                <div className="flex justify-between items-center">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start z-50"
+              onClick={closeSearchModal}
+            >
+              <div
+                className="bg-white w-full max-w-md shadow-lg rounded-b-2xl p-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center gap-4">
                   <span className="text-xs">
-                    Masukan brand atau kota yang anda cari
+                    Masukkan brand atau kota yang anda cari
                   </span>
-                  <button onClick={closeSearchModal} className="text-black">
+                  <button
+                    onClick={closeSearchModal}
+                    className="text-black shrink-0"
+                    aria-label="Tutup"
+                  >
                     &#10005;
                   </button>
                 </div>
                 <form onSubmit={handleSearch}>
-                  <div className="flex items-center justify-center mt-2 border border-gray-300">
+                  <div className="flex items-center mt-3 border border-gray-300 rounded-lg overflow-hidden">
                     <input
                       type="text"
                       name="search"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="w-full px-2 py-1 focus:outline outline-none text-sm"
+                      placeholder="Cari brand atau kota"
+                      className="flex-1 min-w-0 px-3 py-2 outline-none text-base"
                     />
-                    <Image
-                      src="/images/search.svg"
-                      alt="Search"
-                      width={100}
-                      height={100}
-                      className="w-auto h-auto"
-                      typeof="button"
-                    />
+                    <button
+                      type="submit"
+                      className="px-3 shrink-0"
+                      aria-label="Cari"
+                    >
+                      <Image
+                        src="/images/search.svg"
+                        alt="Cari"
+                        width={24}
+                        height={24}
+                        className="w-6 h-6"
+                      />
+                    </button>
                   </div>
                 </form>
               </div>
@@ -214,10 +219,10 @@ export default function Store() {
 
           {/* modal detail location */}
           {isModalVisible && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 overflow-auto">
-              <div className="bg-white w-full h-full max-w-md max-h-full shadow-lg">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+              <div className="bg-white w-full h-dvh max-w-md shadow-lg overflow-y-auto">
                 {/* Header */}
-                <div className="flex justify-between items-center p-6">
+                <div className="sticky top-0 z-10 bg-white flex justify-between items-center p-6">
                   <span className="text-[10px] tracking-widest fontMon">
                     LOKASI TOKO
                   </span>
@@ -227,8 +232,8 @@ export default function Store() {
                 </div>
 
                 {/* Content */}
-                <div className="flex flex-col items-center justify-center my-6 overflow-auto">
-                  <h2 className="text-base">
+                <div className="flex flex-col items-center justify-center px-4 pt-2 pb-10">
+                  <h2 className="text-base text-center">
                     {detail?.brand &&
                       detail.brand.charAt(0).toUpperCase() +
                         detail.brand.slice(1).toLowerCase()}{" "}
@@ -238,7 +243,7 @@ export default function Store() {
                   </h2>
 
                   <div
-                    className="p-4 my-2"
+                    className="w-full my-4 overflow-hidden rounded-lg [&_iframe]:!block [&_iframe]:!h-auto [&_iframe]:!aspect-[4/3] [&_iframe]:!w-full [&_iframe]:!max-w-full"
                     dangerouslySetInnerHTML={{
                       __html:
                         detail && detail.mapStoreUrl
@@ -249,7 +254,7 @@ export default function Store() {
 
                   <div className="flex flex-col items-center justify-center mb-4">
                     <span className="text-sm">Alamat</span>
-                    <p className="text-[10px] fontMon text-center my-2">
+                    <p className="text-[10px] fontMon text-center my-2 break-words max-w-full">
                       {detail?.storeAddress}
                     </p>
                   </div>

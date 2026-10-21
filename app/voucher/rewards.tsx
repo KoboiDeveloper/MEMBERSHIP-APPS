@@ -10,7 +10,9 @@ import { formatDots } from "@/utils/formatDots";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import isVoucherTooOld from "@/utils/isVoucherTooOld";
+import PageError from "@/components/PageError";
+import { RewardListSkeleton } from "@/components/PageSkeletons";
 
 interface Rewards {
   id: number;
@@ -67,38 +69,21 @@ export default function Rewards() {
   };
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <RewardListSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   // Filter: expired lebih dari 1 bulan (30 hari)
-  const isVoucherTooOld = (expiryDate: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const expiry = new Date(expiryDate.split("/").reverse().join("-"));
-    const oneMonthAfterExpiry = new Date(expiry);
-    oneMonthAfterExpiry.setMonth(oneMonthAfterExpiry.getMonth() + 1);
-
-    // Jika hari ini lewat dari 1 bulan setelah expired
-    return today.getTime() > oneMonthAfterExpiry.getTime();
-  };
-
   return (
     <>
       {/* card */}
       {data && data.rewardData ? (
         (() => {
           const filteredVouchers = data.rewardData.filter(
-            (item: Rewards) => !isVoucherTooOld(item.expiredDate)
+            (item: Rewards) => !isVoucherTooOld(item.expiredDate),
           );
 
           if (filteredVouchers.length === 0) {
@@ -125,7 +110,7 @@ export default function Rewards() {
                 key={index}
               >
                 <Image
-                  src={`https://web.amscorp.id:3060/imagestorage/gift/${item.image}`}
+                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL}gift/${item.image}`}
                   alt="reward"
                   width={1240}
                   height={1240}
@@ -167,7 +152,7 @@ export default function Rewards() {
             </div>
 
             <Image
-              src={`https://web.amscorp.id:3060/imagestorage/gift/${detail?.image}`}
+              src={`${process.env.NEXT_PUBLIC_IMAGE_URL}gift/${detail?.image}`}
               alt="reward"
               width={1240}
               height={1240}
@@ -181,7 +166,7 @@ export default function Rewards() {
               <div className="my-6">
                 <div className="border border-gray-300 p-4 rounded-lg">
                   <div className="flex flex-col mb-4">
-                    <span className="text-sm mb-1">Voucher Code</span>
+                    <span className="text-sm mb-1">Kode Voucher</span>
                     <span className="text-[10px] fontMon">
                       {detail?.voucherCode}
                     </span>
@@ -201,7 +186,7 @@ export default function Rewards() {
                   </div>
                 </div>
                 <div className="flex flex-col m-4">
-                  <span className="text-sm mb-5">Terms & Condition</span>
+                  <span className="text-sm mb-5">Syarat & Ketentuan</span>
                   {/* <span className="text-xs">{detail?.termsCondition}</span> */}
                   <ul className="text-xs list-disc marker:text-black">
                     {formatDots(detail?.termsCondition || "").map(
@@ -209,7 +194,7 @@ export default function Rewards() {
                         <li key={index} className="list-disc">
                           {term}
                         </li>
-                      )
+                      ),
                     )}
                   </ul>
                 </div>

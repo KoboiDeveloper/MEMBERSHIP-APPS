@@ -26,7 +26,11 @@ const ProgressBarMileStone: React.FC<ProgressBarProps> = ({
   milestones,
   milestonesDetail,
 }) => {
-  const percentage = (currentValue / maxValue) * 100;
+  const details = Array.isArray(milestonesDetail) ? milestonesDetail : [];
+  const rawPercentage = maxValue > 0 ? (currentValue / maxValue) * 100 : 0;
+  const percentage = Number.isFinite(rawPercentage)
+    ? Math.min(Math.max(rawPercentage, 0), 100)
+    : 0;
 
   return (
     <div className="relative w-full bg-neutral-300  rounded-full h-1 mt-2 mb-4">
@@ -35,8 +39,8 @@ const ProgressBarMileStone: React.FC<ProgressBarProps> = ({
         style={{ width: `${percentage}%` }}
       />
 
-      {milestonesDetail.map((milestone, idx) => {
-        const pos = ((idx + 1) / milestones) * 100;
+      {details.map((milestone, idx) => {
+        const pos = milestones > 0 ? ((idx + 1) / milestones) * 100 : 0;
         const isReached = milestone.milCurrentValue >= milestone.milValue;
         return (
           <div

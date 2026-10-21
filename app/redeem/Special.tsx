@@ -57,7 +57,7 @@ const Special: FC<Voucher> = ({
             >
               <div className="flex justify-between items-center">
                 <div className="flex flex-col items-start gap-2">
-                  <span>Voucher Special</span>
+                  <span>Voucher Spesial</span>
                   <span className="text-xl">
                     Rp {formatToIDR(voucher.nominal)}
                   </span>

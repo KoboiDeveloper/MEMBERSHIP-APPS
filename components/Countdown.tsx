@@ -37,7 +37,7 @@ const Countdown: React.FC<CountdownProps> = ({ targetDate }) => {
         parsedDate.getDate(),
         23,
         59,
-        59 // Set waktu menjadi akhir hari
+        59, // Set waktu menjadi akhir hari
       );
 
       const difference = target.getTime() - now.getTime();

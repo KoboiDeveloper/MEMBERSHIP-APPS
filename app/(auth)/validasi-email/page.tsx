@@ -62,7 +62,7 @@ export default function Validasi() {
 
     try {
       const response = await axios.post(
-        `https://golangapi-j5iu.onrender.com/send-mail-otp-validasi?`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}send-mail-otp-validasi?`,
         data,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

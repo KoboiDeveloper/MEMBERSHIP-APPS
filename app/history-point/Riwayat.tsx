@@ -3,10 +3,10 @@ import { RootState } from "@/redux/store";
 import { getPoint } from "@/redux/thunks/pointThunks";
 import formatDate from "@/utils/formatDate";
 import formatToIDR from "@/utils/formatToIDR";
-import Image from "next/image";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import PageError from "@/components/PageError";
+import { PointHistorySkeleton } from "@/components/PageSkeletons";
 
 interface Point {
   id: number;
@@ -26,16 +26,11 @@ export default function Riwayat() {
   }, [dispatch]);
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <PointHistorySkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
   return (
     <div className="flex flex-col items-center p-4">

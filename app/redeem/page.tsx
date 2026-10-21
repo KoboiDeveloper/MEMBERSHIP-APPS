@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
-import { FadeLoader } from "react-spinners";
 import Barcode from "react-barcode";
 import Button from "@/components/Button";
 import Countdown from "@/components/Countdown";
@@ -18,6 +17,8 @@ import ErrorMessage from "@/components/ErrorMessage";
 import Vouchers from "./Vouchers";
 import Special from "./Special";
 import Input from "@/components/Input";
+import PageError from "@/components/PageError";
+import { RedeemSkeleton } from "@/components/PageSkeletons";
 
 interface Voucher {
   id: number;
@@ -263,15 +264,10 @@ export default function Redeem() {
   };
 
   if (!user || !data) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <RedeemSkeleton />;
   }
 
-  if (error) return <p>Error: {error}</p>;
+  if (error) return <PageError />;
 
   return (
     <div className="flex justify-center items-center">
@@ -317,7 +313,7 @@ export default function Redeem() {
                 }`}
                 onClick={() => handleMenuChange("special")}
               >
-                Special Offer
+                Penawaran Spesial
               </span>
             </div>
 
@@ -513,11 +509,10 @@ export default function Redeem() {
                 <div className="flex justify-center">
                   <Button
                     type="submit"
-                    label="Submit"
+                    label="Konfirmasi"
                     onClick={handlePinSubmit}
-                    disabled={
-                      isLoading || user.memberInfoData.pos_transaction === true
-                    }
+                    loading={isLoading}
+                    disabled={user.memberInfoData.pos_transaction === true}
                     className="bg-base-accent text-white"
                   />
                 </div>

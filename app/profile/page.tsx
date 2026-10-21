@@ -13,7 +13,9 @@ import axios from "axios";
 import Image from "next/image";
 import React, { FormEvent, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import useRegionOptions from "@/hooks/useRegionOptions";
+import PageError from "@/components/PageError";
+import { ProfileSkeleton } from "@/components/PageSkeletons";
 
 type MemberInfo = {
   memberID: string;
@@ -28,24 +30,10 @@ type MemberInfo = {
   dateofBirth: string;
 };
 
-type provincesData = {
-  prov_id: number;
-  prov_name: string;
-};
-
-type citiesData = {
-  city_id: number;
-  city_name: string;
-  prov_id: number;
-};
-
-type Option = { id: string | number; label: string };
-
 export default function Profile() {
   const dispatch = useAppDispatch();
-  const [optionsProv, setOptionsProv] = useState<Option[]>([]);
-  const [optionsCity, setOptionsCity] = useState<Option[]>([]);
   const [prov, setProv] = useState("");
+  const { optionsProv, optionsCity } = useRegionOptions(prov);
   const [city, setCity] = useState("");
   const [successMessage, setSuccessMessage] = useState<boolean | false>(false);
   const [errorMessage, setErrorMessage] = useState<boolean | false>(false);
@@ -79,42 +67,8 @@ export default function Profile() {
     }
   }, [userData]);
 
-  useEffect(() => {
-    const fetchDataProvince = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}provinces`
-      );
-      setOptionsProv(
-        response.data.provincesData.map((item: provincesData) => ({
-          id: item.prov_id,
-          label: item.prov_name,
-        }))
-      );
-    };
-    fetchDataProvince();
-  }, []);
-
-  useEffect(() => {
-    if (prov) {
-      const fetchDataCity = async () => {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}cities?provID=${prov}`
-        );
-        setOptionsCity(
-          response.data.citiesData.map((item: citiesData) => ({
-            id: item.city_id,
-            label: item.city_name,
-          }))
-        );
-      };
-      fetchDataCity();
-    } else {
-      setOptionsCity([]);
-    }
-  }, [prov]);
-
   const handleChange = (
-    event: FormEvent<HTMLInputElement | HTMLSelectElement>
+    event: FormEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const target = event.currentTarget as HTMLInputElement | HTMLSelectElement;
     const { name, value } = target;
@@ -169,7 +123,7 @@ export default function Profile() {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.responseCode === "2002500") {
@@ -189,16 +143,11 @@ export default function Profile() {
   };
 
   if (userData == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   return (

@@ -93,7 +93,7 @@ export default function ResetPassword() {
 
     try {
       const response = await axios.post(
-        `https://golangapi-j5iu.onrender.com/send-wa-otp-forgot-password-verify?userAccount=${password.phoneNumber}&token=${token}&password=${password.password}`
+        `${process.env.NEXT_PUBLIC_BASE_URL}send-wa-otp-forgot-password-verify?userAccount=${password.phoneNumber}&token=${token}&password=${password.password}`
       );
 
       if (response.data.responseCode === "2002500") {

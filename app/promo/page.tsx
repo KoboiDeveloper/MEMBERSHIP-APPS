@@ -12,8 +12,9 @@ import formatDesc from "@/utils/formatDesc";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
 import Link from "next/link";
+import PageError from "@/components/PageError";
+import { PromoSkeleton } from "@/components/PageSkeletons";
 
 type Promo = {
   id: number;
@@ -46,7 +47,7 @@ export default function Promo() {
   const [detail, setDetail] = useState<Promo | null>(null);
   const { error, data } = useSelector((state: RootState) => state.promo);
   const { data: category } = useSelector(
-    (state: RootState) => state.categoryPromo
+    (state: RootState) => state.categoryPromo,
   );
   const { data: brand } = useSelector((state: RootState) => state.brand);
 
@@ -89,7 +90,7 @@ export default function Promo() {
   // Fungsi untuk menangani perubahan checkbox
   const handleCheckboxChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    type: "brand" | "category"
+    type: "brand" | "category",
   ) => {
     const { checked, value } = e.target;
     setFilterData((prevState) => ({
@@ -138,16 +139,11 @@ export default function Promo() {
   };
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <PromoSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   // funsi untuk huruf kapital di depan
@@ -200,7 +196,7 @@ export default function Promo() {
                     <Link href="/lucky-draw">
                       <div>
                         <Image
-                          src={`https://web.amscorp.id:3060/imagestorage/promo/${item.imageUrl}`}
+                          src={`${process.env.NEXT_PUBLIC_IMAGE_URL}promo/${item.imageUrl}`}
                           alt="reward"
                           width={1240}
                           height={200}
@@ -219,7 +215,7 @@ export default function Promo() {
                   ) : (
                     <div onClick={() => showModal({ id: item.id })}>
                       <Image
-                        src={`https://web.amscorp.id:3060/imagestorage/promo/${item.imageUrl}`}
+                        src={`${process.env.NEXT_PUBLIC_IMAGE_URL}promo/${item.imageUrl}`}
                         alt="reward"
                         width={1240}
                         height={1240}
@@ -256,7 +252,7 @@ export default function Promo() {
                 </div>
 
                 <Image
-                  src={`https://web.amscorp.id:3060/imagestorage/promo/${detail?.imageUrl}`}
+                  src={`${process.env.NEXT_PUBLIC_IMAGE_URL}promo/${detail?.imageUrl}`}
                   alt="reward"
                   width={1240}
                   height={1240}
@@ -330,7 +326,7 @@ export default function Promo() {
                                 {capitalizeWords(item.category)}
                               </span>
                             </div>
-                          )
+                          ),
                         )}
                       </div>
                     </div>

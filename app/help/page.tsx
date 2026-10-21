@@ -6,10 +6,11 @@ import { getContact } from "@/redux/thunks/contactThunks";
 import Image from "next/image";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
 import chat from "../../public/images/chat.svg";
 import email from "../../public/images/email.svg";
 import instagram from "../../public/images/instagram.svg";
+import PageError from "@/components/PageError";
+import { HelpSkeleton } from "@/components/PageSkeletons";
 
 export default function Help() {
   const dispatch = useAppDispatch();
@@ -20,16 +21,11 @@ export default function Help() {
   }, [dispatch]);
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <HelpSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   return (
@@ -68,7 +64,7 @@ export default function Help() {
           <div className="p-8">
             <div className="bg-white p-4 w-full rounded-lg border border-gray-300 flex items-center justify-between mb-4">
               <a
-                href={`https://wa.me/${data?.contactData.phoneNumber}`}
+                href={`${process.env.NEXT_PUBLIC_WA_URL}${data?.contactData.phoneNumber}`}
                 target="_blank"
                 className="flex justify-start items-center w-full gap-4"
               >

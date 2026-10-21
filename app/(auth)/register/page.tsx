@@ -7,29 +7,13 @@ import Select from "@/components/Select";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState, FormEvent, ChangeEvent } from "react";
-
-type cityData = {
-  city_id: number;
-  city_name: string;
-  prov_id: number;
-};
-
-type provincesData = {
-  prov_id: number;
-  prov_name: string;
-};
-
-type Option = {
-  id: string | number;
-  label: string;
-};
+import React, { useState, FormEvent, ChangeEvent } from "react";
+import useRegionOptions from "@/hooks/useRegionOptions";
 
 export default function Register() {
   const router = useRouter();
-  const [optionsProv, setOptionsProv] = useState<Option[]>([]);
-  const [optionsCity, setOptionsCity] = useState<Option[]>([]);
   const [prov, setProv] = useState("");
+  const { optionsProv, optionsCity } = useRegionOptions(prov);
   const [city, setCity] = useState("");
   const [gender, setGender] = useState("");
   const [formError, setFormError] = useState<{ [key: string]: string }>({});
@@ -207,7 +191,7 @@ export default function Register() {
 
   const handleSelectChange = (
     event: ChangeEvent<HTMLSelectElement>,
-    field: "province" | "city" | "gender"
+    field: "province" | "city" | "gender",
   ) => {
     const value = event.target.value;
     if (field === "province") setProv(value);
@@ -226,48 +210,6 @@ export default function Register() {
       });
     }
   };
-
-  useEffect(() => {
-    const fetchDataProvince = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}provinces`
-        );
-        setOptionsProv(
-          response.data.provincesData.map((item: provincesData) => ({
-            id: item.prov_id,
-            label: item.prov_name,
-          }))
-        );
-      } catch (error) {
-        console.log("Error fetching province data:", error);
-      }
-    };
-    fetchDataProvince();
-  }, []);
-
-  useEffect(() => {
-    if (prov) {
-      const fetchDataCity = async () => {
-        try {
-          const response = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}cities?provID=${prov}`
-          );
-          setOptionsCity(
-            response.data.citiesData.map((item: cityData) => ({
-              id: item.city_id,
-              label: item.city_name,
-            }))
-          );
-        } catch (error) {
-          console.log("Error fetching city data:", error);
-        }
-      };
-      fetchDataCity();
-    } else {
-      setOptionsCity([]);
-    }
-  }, [prov]);
 
   const validateForm = () => {
     const errors: { [key: string]: string } = {};
@@ -370,12 +312,12 @@ export default function Register() {
           dateofBirth: formData.dateofBirth,
           minatKategori: "-",
         },
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
 
       if (res.data.responseCode === "2002500") {
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}dashboard/Verify?userAccount=${formData.phone}`
+          `${process.env.NEXT_PUBLIC_API_URL}dashboard/Verify?userAccount=${formData.phone}`,
         );
 
         if (response.data.responseCode === "2002500") {

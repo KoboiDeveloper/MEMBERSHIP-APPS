@@ -6,7 +6,6 @@ import { getTier } from "@/redux/thunks/tierThunks";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
 import formatToIDR from "@/utils/formatToIDR";
 import checklist from "@/public/images/circle_check.svg";
 import locked from "@/public/images/circle_lock.svg";
@@ -15,6 +14,8 @@ import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
+import PageError from "@/components/PageError";
+import { TierInfoSkeleton } from "@/components/PageSkeletons";
 
 interface Tier {
   id: number;
@@ -39,16 +40,11 @@ export default function TierInfo() {
   }, [dispatch]);
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <TierInfoSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   const activeTier = data.tierData[activeIndex] || data.tierData[0];
@@ -114,7 +110,7 @@ export default function TierInfo() {
                     <div className="flex flex-col items-center text-center w-full">
                       <div className="flex flex-col items-center text-center justify-center w-80">
                         <Image
-                          src={`https://amscorp.id/card/${tier.tier_image}`}
+                          src={`${process.env.NEXT_PUBLIC_CARD_URL}${tier.tier_image}`}
                           alt={tier.tier}
                           width={800}
                           height={400}
@@ -180,7 +176,7 @@ export default function TierInfo() {
                 <h1 className="text-2xl text-center">{activeTier.tier}</h1>
                 <div>
                   <div className="p-6 w-full min-h-80">
-                    <h2 className="mb-2">Benefit</h2>
+                    <h2 className="mb-2">Keuntungan</h2>
 
                     {/* Jika ini adalah index pertama, tampilkan tier_0 */}
                     {activeIndex === 0 && (

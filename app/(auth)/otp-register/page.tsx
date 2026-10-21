@@ -6,7 +6,9 @@ import LogoHeader from "@/components/LogoHeader";
 import SuccessMessage from "@/components/SuccessMessage";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
+import useOtpInput from "@/hooks/useOtpInput";
+import useResendCountdown from "@/hooks/useResendCountdown";
 
 interface FormData {
   userAccount: string;
@@ -15,9 +17,8 @@ interface FormData {
 
 export default function Otp() {
   const router = useRouter();
-  const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [isWaiting, setIsWaiting] = useState(false);
+  const { otpValues, setOtpValues, inputRefs, handleChange } = useOtpInput();
+  const { countdown, isWaiting, startCountdown } = useResendCountdown();
   const [message, setMessage] = useState(false);
   const [messageSuccess, setMessageSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState(false);
@@ -45,40 +46,6 @@ export default function Otp() {
     otp: "",
   });
 
-  const inputRefs = [
-    useRef<HTMLInputElement | null>(null),
-    useRef<HTMLInputElement | null>(null),
-    useRef<HTMLInputElement | null>(null),
-    useRef<HTMLInputElement | null>(null),
-    useRef<HTMLInputElement | null>(null),
-    useRef<HTMLInputElement | null>(null),
-  ];
-
-  const focusNextInput = (index: number) => {
-    if (index < inputRefs.length - 1 && inputRefs[index + 1].current) {
-      inputRefs[index + 1].current?.focus();
-    }
-  };
-
-  const focusPreviousInput = (index: number) => {
-    if (index > 0 && inputRefs[index - 1].current) {
-      inputRefs[index - 1].current?.focus();
-    }
-  };
-
-  const handleChange = (e: { target: { value: string } }, index: number) => {
-    const val = e.target.value;
-    const updatedValues = [...otpValues];
-    updatedValues[index] = val;
-    setOtpValues(updatedValues);
-
-    if (val.length === 1 && index < inputRefs.length - 1) {
-      focusNextInput(index);
-    } else if (val.length === 0 && index > 0) {
-      focusPreviousInput(index);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -88,7 +55,7 @@ export default function Otp() {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}dashboard/register/validate`,
         data,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
 
       if (response.data.responseCode === "2002500") {
@@ -112,7 +79,7 @@ export default function Otp() {
     const getPhone = sessionStorage.getItem("phone");
 
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}dashboard/Verify?userAccount=${getPhone}`
+      `${process.env.NEXT_PUBLIC_API_URL}dashboard/Verify?userAccount=${getPhone}`,
     );
 
     if (response.data.responseCode === "2002500") {
@@ -124,18 +91,7 @@ export default function Otp() {
       console.log("Error OTP:", response.data);
     }
 
-    setCountdown(60);
-    setIsWaiting(true);
-    const timer = setInterval(() => {
-      setCountdown((prevCountdown) => {
-        if (prevCountdown === 1) {
-          clearInterval(timer);
-          setIsWaiting(false);
-          return null;
-        }
-        return prevCountdown ? prevCountdown - 1 : null;
-      });
-    }, 1000);
+    startCountdown();
   };
 
   return (

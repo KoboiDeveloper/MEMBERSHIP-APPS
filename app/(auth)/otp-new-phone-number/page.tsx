@@ -7,6 +7,8 @@ import SuccessMessage from "@/components/SuccessMessage";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
+import useResendCountdown from "@/hooks/useResendCountdown";
+import { focusNextInput, focusPreviousInput } from "@/utils/otpFocus";
 
 export default function Otp() {
   const router = useRouter();
@@ -19,43 +21,24 @@ export default function Otp() {
     "",
     "",
   ]);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [isWaiting, setIsWaiting] = useState(false);
+  const { countdown, isWaiting, startCountdown } = useResendCountdown();
   const [message, setMessage] = useState(false);
   const [messageSuccess, setMessageSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const inputRefsWa = Array.from({ length: 6 }, () =>
-    useRef<HTMLInputElement | null>(null)
+    useRef<HTMLInputElement | null>(null),
   );
   const inputRefsEmail = Array.from({ length: 6 }, () =>
-    useRef<HTMLInputElement | null>(null)
+    useRef<HTMLInputElement | null>(null),
   );
-
-  const focusNextInput = (
-    index: number,
-    refs: React.RefObject<HTMLInputElement>[]
-  ) => {
-    if (index < refs.length - 1 && refs[index + 1].current) {
-      refs[index + 1].current?.focus();
-    }
-  };
-
-  const focusPreviousInput = (
-    index: number,
-    refs: React.RefObject<HTMLInputElement>[]
-  ) => {
-    if (index > 0 && refs[index - 1].current) {
-      refs[index - 1].current?.focus();
-    }
-  };
 
   const handleChange = (
     e: { target: { value: string } },
     index: number,
     setOtpValues: React.Dispatch<React.SetStateAction<string[]>>,
-    refs: React.RefObject<HTMLInputElement>[]
+    refs: React.RefObject<HTMLInputElement>[],
   ) => {
     const val = e.target.value;
     setOtpValues((prev) => {
@@ -90,7 +73,7 @@ export default function Otp() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.responseCode === "2002500") {
@@ -126,7 +109,7 @@ export default function Otp() {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      }
+      },
     );
 
     if (response.data.responseCode === "2002500") {
@@ -138,18 +121,7 @@ export default function Otp() {
       console.log("Error OTP:", response.data);
     }
 
-    setCountdown(60);
-    setIsWaiting(true);
-    const timer = setInterval(() => {
-      setCountdown((prevCountdown) => {
-        if (prevCountdown === 1) {
-          clearInterval(timer);
-          setIsWaiting(false);
-          return null;
-        }
-        return prevCountdown ? prevCountdown - 1 : null;
-      });
-    }, 1000);
+    startCountdown();
   };
 
   return (

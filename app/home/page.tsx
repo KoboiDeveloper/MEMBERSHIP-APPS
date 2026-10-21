@@ -14,12 +14,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { FormEvent, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
 import Misi from "@/public/images/CRM-Mission.svg";
 import Lucky from "@/public/images/CRM-Lucky draw.svg";
 import Referral from "@/public/images/CRM-Referral.svg";
 import Promo from "@/public/images/CRM-Promo.svg";
 import { GoogleTagManager } from "@next/third-parties/google";
+import toNormalCase from "@/utils/toNormalCase";
+import PageError from "@/components/PageError";
+import { HomeSkeleton } from "@/components/PageSkeletons";
 
 export default function Page() {
   const router = useRouter();
@@ -48,16 +50,11 @@ export default function Page() {
   }, [user]);
 
   if (user == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <HomeSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   const handlePopUpQr = () => {
@@ -83,13 +80,6 @@ export default function Page() {
       }, 3000);
     }
   };
-
-  function toNormalCase(str: string) {
-    return str
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
-  }
 
   return (
     <>
@@ -140,7 +130,7 @@ export default function Page() {
                     </span>
                   </div>
                   <Image
-                    src={`https://amscorp.id/card/${user.memberInfoData.tierInfo.profileImage}`}
+                    src={`${process.env.NEXT_PUBLIC_CARD_URL}${user.memberInfoData.tierInfo.profileImage}`}
                     width={50}
                     height={50}
                     alt={`${user.memberInfoData.tierInfo.profileImage}`}
@@ -165,10 +155,10 @@ export default function Page() {
             {/* promo carousel */}
 
             {/* Card tier */}
-            <div className="flex justify-center items-center z-10 relative w-full mb-8">
-              <div className="relative">
+            <div className="flex justify-center items-center z-10 relative w-full mb-8 px-8">
+              <div className="relative w-full">
                 <Image
-                  src={`https://amscorp.id/card/${user.memberInfoData.tierInfo.cardImage}`}
+                  src={`${process.env.NEXT_PUBLIC_CARD_URL}${user.memberInfoData.tierInfo.cardImage}`}
                   alt={`${user.memberInfoData.tierInfo.cardImage}`}
                   width={500}
                   height={500}
@@ -277,10 +267,10 @@ export default function Page() {
                       src={Lucky}
                       width={50}
                       height={50}
-                      alt="Lucky Draw"
+                      alt="Undian"
                       className="w-auto h-full rounded-md bg-white"
                     />
-                    <span className="text-[10px]">Lucky Draw</span>
+                    <span className="text-[10px]">Undian</span>
                   </Link>
                   <div className="flex flex-col justify-center items-center gap-2 w-16 drop-shadow-[3px_3px_5px_rgba(0,0,0,0.10)]">
                     <Link

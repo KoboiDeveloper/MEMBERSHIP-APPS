@@ -5,8 +5,6 @@ import { RootState } from "@/redux/store";
 import { getFaq } from "@/redux/thunks/faqThunks";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
-import Image from "next/image";
 
 import {
   Accordion,
@@ -17,6 +15,8 @@ import {
 } from "react-accessible-accordion";
 
 import "react-accessible-accordion/dist/fancy-example.css";
+import PageError from "@/components/PageError";
+import { FaqSkeleton } from "@/components/PageSkeletons";
 
 export default function Faq() {
   const dispatch = useAppDispatch();
@@ -27,16 +27,11 @@ export default function Faq() {
   }, [dispatch]);
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <FaqSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   return (

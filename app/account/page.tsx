@@ -15,8 +15,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { FormEvent, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
 import tiergroup from "../../public/images/tiergroup.svg";
+import toNormalCase from "@/utils/toNormalCase";
+import PageError from "@/components/PageError";
+import { AccountSkeleton } from "@/components/PageSkeletons";
 
 export default function Page() {
   const router = useRouter();
@@ -70,13 +72,6 @@ export default function Page() {
     }
   };
 
-  function toNormalCase(str: string) {
-    return str
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
-  }
-
   const handleLogout = () => {
     localStorage.removeItem("member");
     localStorage.removeItem("token");
@@ -85,16 +80,11 @@ export default function Page() {
   };
 
   if (user == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <AccountSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   // Render konten jika user ditemukan
@@ -118,7 +108,7 @@ export default function Page() {
                   </span>
                 </div>
                 <Image
-                  src={`https://amscorp.id/card/${user.memberInfoData.tierInfo.profileImage}`}
+                  src={`${process.env.NEXT_PUBLIC_CARD_URL}${user.memberInfoData.tierInfo.profileImage}`}
                   width={50}
                   height={50}
                   alt={`${user.memberInfoData.tierInfo.profileImage}`}
@@ -131,7 +121,7 @@ export default function Page() {
           {/* <div className="flex justify-center items-center relative w-full">
             <div className="relative">
               <Image
-                src={`https://amscorp.id/card/${user.memberInfoData.tierInfo.cardImage}`}
+                src={`${process.env.NEXT_PUBLIC_CARD_URL}${user.memberInfoData.tierInfo.cardImage}`}
                 alt={`${user.memberInfoData.tierInfo.cardImage}`}
                 width={500}
                 height={500}
@@ -278,7 +268,7 @@ export default function Page() {
                 className="flex items-center justify-center border border-base-accent rounded-lg p-2 gap-2 cursor-pointer"
                 onClick={handlePopUpQr}
               >
-                <span className="text-[9px] tracking-wider">Show ID</span>
+                <span className="text-[9px] tracking-wider">Tampilkan ID</span>
                 <Image
                   src="/images/qr.svg"
                   width={50}
@@ -338,7 +328,7 @@ export default function Page() {
         <MenuAccount />
         <button className="pb-24 my-3 underline underline-offset-4">
           <span className="text-sm tracking-wider" onClick={handleLogout}>
-            SIGN OUT
+            KELUAR
           </span>
         </button>
 

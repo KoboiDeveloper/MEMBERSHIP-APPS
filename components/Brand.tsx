@@ -34,7 +34,7 @@ export default function Brand() {
             }}
           >
             <Image
-              src={`https://amscorp.id/brand/${brand.brandImage}`}
+              src={`${process.env.NEXT_PUBLIC_BRAND_URL}${brand.brandImage}`}
               width={250}
               height={100}
               alt={brand.brand}

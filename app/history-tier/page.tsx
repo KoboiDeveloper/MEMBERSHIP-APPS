@@ -9,7 +9,9 @@ import formatDate from "@/utils/formatDate";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import toNormalCase from "@/utils/toNormalCase";
+import PageError from "@/components/PageError";
+import { HistoryTierSkeleton } from "@/components/PageSkeletons";
 
 interface Tier {
   id: number;
@@ -36,23 +38,11 @@ export default function HistoryTier() {
   }, [dispatch]);
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <HistoryTierSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
-  }
-
-  function toNormalCase(str: string) {
-    return str
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
+    return <PageError />;
   }
 
   // fungsi untuk menampilkan filter
@@ -72,7 +62,7 @@ export default function HistoryTier() {
       setFilteredData(data.historyTierData);
     } else {
       const filtered = data.historyTierData.filter(
-        (item: Tier) => item.status === selectedStatus
+        (item: Tier) => item.status === selectedStatus,
       );
       setFilteredData(filtered);
     }
@@ -184,7 +174,7 @@ export default function HistoryTier() {
                             onChange={(e) => setSelectedStatus(e.target.value)}
                             checked={selectedStatus === "All"}
                           />
-                          <span>All</span>
+                          <span>Semua</span>
                         </label>
                         <label className="flex text-sm uppercase items-center gap-2 cursor-pointer">
                           <input

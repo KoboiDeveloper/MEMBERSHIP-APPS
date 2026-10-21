@@ -66,7 +66,7 @@ const ModalInputPin: FC<ModalInputPinProps> = ({
               className="absolute inset-y-0 top-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer text-[8px] fontMon"
               onClick={() => setShowPin(!showPin)}
             >
-              {showPin ? <p>HIDE</p> : <p>SHOW</p>}
+              {showPin ? <p>SEMBUNYIKAN</p> : <p>TAMPILKAN</p>}
             </span>
           </div>
 

@@ -8,7 +8,6 @@ import formatToIDR from "@/utils/formatToIDR";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
 import Link from "next/link";
 import ProgressBar from "@/components/PrgressBar";
 import checklist from "@/public/images/circle_check.svg";
@@ -25,6 +24,9 @@ import TabBar from "@/components/TabBar";
 import { Pagination } from "swiper/modules";
 import { useRouter } from "next/navigation";
 import { getUsers } from "@/redux/thunks/usersThunks";
+import toNormalCase from "@/utils/toNormalCase";
+import PageError from "@/components/PageError";
+import { TransactionSkeleton } from "@/components/PageSkeletons";
 
 interface Transaction {
   id: number;
@@ -69,15 +71,15 @@ export default function Transaction() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   // Memuat data user saat komponen dirender
-    useEffect(() => {
-      const member = localStorage.getItem("member");
-      const token = localStorage.getItem("token");
-      if (!member || !token) {
-        router.replace("/login"); // Redirect ke halaman login
-      } else {
-        dispatch(getUsers()); // Panggil thunk dengan token
-      }
-    }, [dispatch, router]);
+  useEffect(() => {
+    const member = localStorage.getItem("member");
+    const token = localStorage.getItem("token");
+    if (!member || !token) {
+      router.replace("/login"); // Redirect ke halaman login
+    } else {
+      dispatch(getUsers()); // Panggil thunk dengan token
+    }
+  }, [dispatch, router]);
 
   useEffect(() => {
     dispatch(getTransaction());
@@ -91,7 +93,7 @@ export default function Transaction() {
   useEffect(() => {
     if (data?.memberInfoData?.tierData?.length) {
       const activeTierIndex = data.memberInfoData.tierData.findIndex(
-        (tier: Tier) => tier.status === "Active"
+        (tier: Tier) => tier.status === "Active",
       );
       if (activeTierIndex !== -1) {
         setActiveIndex(activeTierIndex);
@@ -99,16 +101,9 @@ export default function Transaction() {
     }
   }, [data]);
 
-  function toNormalCase(str: string) {
-    return str
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(" ");
-  }
-
   const showModal = ({ id }: { id: number }) => {
     const foundItem = data?.transactionData?.find(
-      (item: Transaction) => item.id === id
+      (item: Transaction) => item.id === id,
     );
     if (foundItem) {
       setIsModalVisible(true);
@@ -121,20 +116,15 @@ export default function Transaction() {
   };
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <TransactionSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   const activeTierIndex = data.memberInfoData.tierData.findIndex(
-    (tier: Tier) => tier.status === "Active"
+    (tier: Tier) => tier.status === "Active",
   );
 
   // Jika tidak ada yang aktif, default ke indeks pertama (0)
@@ -182,7 +172,7 @@ export default function Transaction() {
                   <div className="flex flex-col items-center text-center w-full scale-slide">
                     <div className="flex flex-col items-center text-center justify-center w-96 mb-3 relative">
                       <Image
-                        src={`https://amscorp.id/card/${tier.tier_image}`}
+                        src={`${process.env.NEXT_PUBLIC_CARD_URL}${tier.tier_image}`}
                         alt={tier.tier}
                         width={800}
                         height={400}
@@ -252,7 +242,7 @@ export default function Transaction() {
                                     Rp{" "}
                                     {formatToIDR(
                                       data.memberInfoData.tierInfo
-                                        .amountForNextTier || 0
+                                        .amountForNextTier || 0,
                                     )}{" "}
                                     untuk tier selanjutnya
                                   </small>
@@ -355,7 +345,7 @@ export default function Transaction() {
             <div className="w-full px-8">
               {/* Benefit Section */}
               <div className="flex flex-row justify-between mb-3 fontMon tracking-wider uppercase text-white">
-                <span className="text-[10px] mt-1">Benefit :</span>
+                <span className="text-[10px] mt-1">Keuntungan :</span>
                 <Link
                   href={"/tier-info"}
                   className="bg-grey/10 text-[8px] backdrop-blur-lg backdrop-saturate-100 shadow-lg border border-white/20 rounded-full px-3 py-1 cursor-pointer"
@@ -489,25 +479,25 @@ export default function Transaction() {
                     Harga diatas sudah termasuk PPN 11%
                   </p>
                   <div className="flex justify-between my-2">
-                    <span>Reward point</span>
+                    <span>Poin reward</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.rewardPoint || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between my-2">
-                    <span>Bonus point</span>
+                    <span>Poin bonus</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.bonusPoint || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between my-2">
-                    <span>Birthday point</span>
+                    <span>Poin ulang tahun</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.birthdayPoint || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between my-2">
-                    <span>Special day point</span>
+                    <span>Poin hari spesial</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.bigdayPoint || 0)}
                     </span>

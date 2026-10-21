@@ -27,9 +27,7 @@ export default function Page() {
         <div className="bg-base-accent w-full min-h-screen">
           <Header>
             {successMessageJoin && (
-              <div className="absolute top-0 left-0 right-0 z-50">
-                <SuccessMessage message="Mission joined successfully." />
-              </div>
+              <SuccessMessage message="Berhasil bergabung ke misi." />
             )}
             <div className="flex items-center justify-between mt-8">
               <span

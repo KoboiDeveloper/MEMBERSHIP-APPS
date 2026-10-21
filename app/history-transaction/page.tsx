@@ -12,7 +12,8 @@ import formatToIDR from "@/utils/formatToIDR";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import PageError from "@/components/PageError";
+import { HistoryTransactionSkeleton } from "@/components/PageSkeletons";
 
 interface Transaction {
   id: number;
@@ -120,7 +121,7 @@ export default function HistoryTransaction() {
     if (filter.startDate && filter.endDate) {
       const daysDifference = calculateDateDifference(
         filter.startDate,
-        filter.endDate
+        filter.endDate,
       );
 
       if (daysDifference > 90) {
@@ -151,16 +152,11 @@ export default function HistoryTransaction() {
   };
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <HistoryTransactionSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   return (
@@ -307,25 +303,25 @@ export default function HistoryTransaction() {
                     Harga diatas sudah termasuk PPN 11%
                   </p>
                   <div className="flex justify-between my-2">
-                    <span>Reward point</span>
+                    <span>Poin reward</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.rewardPoint || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between my-2">
-                    <span>Bonus point</span>
+                    <span>Poin bonus</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.bonusPoint || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between my-2">
-                    <span>Birthday point</span>
+                    <span>Poin ulang tahun</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.birthdayPoint || 0)}
                     </span>
                   </div>
                   <div className="flex justify-between my-2">
-                    <span>Special day point</span>
+                    <span>Poin hari spesial</span>
                     <span className="fontMon text-[10px]">
                       {formatToIDR(detail?.bigdayPoint || 0)}
                     </span>

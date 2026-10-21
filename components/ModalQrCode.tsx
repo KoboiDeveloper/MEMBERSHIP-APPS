@@ -1,5 +1,6 @@
 import React from "react";
 import QRCode from "react-qr-code";
+import toNormalCase from "@/utils/toNormalCase";
 
 type ModalQRCodeProps = {
   data: {
@@ -9,13 +10,6 @@ type ModalQRCodeProps = {
   } | null;
   closeModal: () => void;
 };
-
-function toNormalCase(str: string) {
-  return str
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-}
 
 const ModalQRCode: React.FC<ModalQRCodeProps> = ({ data, closeModal }) => {
   return (

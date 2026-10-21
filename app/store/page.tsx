@@ -10,7 +10,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import generateSlug from "@/utils/generateSlug";
+import PageError from "@/components/PageError";
+import { StoreSkeleton } from "@/components/PageSkeletons";
 
 interface Brand {
   id: number;
@@ -41,7 +43,7 @@ export default function Store() {
     setFilterData(
       e.target.checked
         ? [...filterData, e.target.value]
-        : filterData.filter((value) => value !== e.target.value)
+        : filterData.filter((value) => value !== e.target.value),
     );
   };
 
@@ -50,32 +52,19 @@ export default function Store() {
     setFilteredData(
       data.brandData.filter((brands: Brand) => {
         return filterData.includes(brands.brand);
-      })
+      }),
     );
     setIsFilterModalVisible(false);
     setFilterData([]);
   };
 
   // fungsi untuk membuat slug untuk brand
-  const generateSlug = (text: string) => {
-    return text
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, "") // Hapus karakter spesial
-      .replace(/\s+/g, "-"); // Ganti spasi dengan "-"
-  };
-
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <StoreSkeleton />;
   } else if (error) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p>Error: {error}</p>
+        <PageError />
       </div>
     );
   }
@@ -117,7 +106,7 @@ export default function Store() {
                   }}
                 >
                   <Image
-                    src={`https://amscorp.id/brand/${brand.brandImage}`}
+                    src={`${process.env.NEXT_PUBLIC_BRAND_URL}${brand.brandImage}`}
                     width={250}
                     height={100}
                     alt={brand.brand}

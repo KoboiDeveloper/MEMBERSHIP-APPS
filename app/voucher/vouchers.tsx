@@ -7,7 +7,9 @@ import formatToIDR from "@/utils/formatToIDR";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import isVoucherTooOld from "@/utils/isVoucherTooOld";
+import PageError from "@/components/PageError";
+import { VoucherListSkeleton } from "@/components/PageSkeletons";
 
 interface Voucher {
   id: number;
@@ -34,7 +36,7 @@ export default function Vouchers() {
   const handleShowVoucher = (noVoucher: string) => {
     setIsModalVisible(true);
     const detail = data?.voucherData.find(
-      (item: Voucher) => item.noVoucher === noVoucher
+      (item: Voucher) => item.noVoucher === noVoucher,
     );
     setVoucherData(detail);
   };
@@ -44,16 +46,11 @@ export default function Vouchers() {
   };
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <VoucherListSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   const isVoucherExpired = (expiryDate: string) => {
@@ -65,25 +62,13 @@ export default function Vouchers() {
   };
 
   // Filter: expired lebih dari 1 bulan (30 hari)
-  const isVoucherTooOld = (expiryDate: string) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const expiry = new Date(expiryDate.split("/").reverse().join("-"));
-    const oneMonthAfterExpiry = new Date(expiry);
-    oneMonthAfterExpiry.setMonth(oneMonthAfterExpiry.getMonth() + 1);
-
-    // Jika hari ini lewat dari 1 bulan setelah expired
-    return today.getTime() > oneMonthAfterExpiry.getTime();
-  };
-
   return (
     <>
       {/* Card */}
       {data && data.voucherData ? (
         (() => {
           const filteredVouchers = data.voucherData.filter(
-            (item: Voucher) => !isVoucherTooOld(item.tanggalExpired)
+            (item: Voucher) => !isVoucherTooOld(item.tanggalExpired),
           );
 
           if (filteredVouchers.length === 0) {
@@ -119,8 +104,8 @@ export default function Vouchers() {
                       {item.category == "VCR"
                         ? "Voucher"
                         : item.category == "MISSION"
-                        ? "Voucher Misi"
-                        : "Voucher Spesial"}
+                          ? "Voucher Misi"
+                          : "Voucher Spesial"}
                       <span className="px-1 normal-case">
                         {item.type === "CASHBACK" ? "Cashback" : " "}
                       </span>

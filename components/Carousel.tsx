@@ -46,7 +46,7 @@ const Carousel: React.FC = () => {
           data.promoData.map((item: Promo) => (
             <SwiperSlide key={item.id}>
               <Image
-                src={`https://web.amscorp.id:3060/imagestorage/promo/${item.imageUrl}`}
+                src={`${process.env.NEXT_PUBLIC_IMAGE_URL}promo/${item.imageUrl}`}
                 alt={`Image ${item.id}`}
                 // className="w-full max-h-48 object-cover rounded-lg min-h-48"
                 className="w-full max-h-52 sm:max-h-52 object-cover rounded-lg"

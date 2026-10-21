@@ -23,11 +23,11 @@ export default function Button({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
+      disabled={disabled || loading}
       style={style}
-      className={`${className} text-sm fontMon tracking-wider p-4 rounded-full w-72 uppercase`}
+      className={`${className} text-sm fontMon tracking-wider p-4 rounded-full w-72 max-w-full uppercase disabled:cursor-not-allowed disabled:opacity-60`}
     >
-      {loading ? <span>Loading...</span> : label}
+      {loading ? <span>Memuat...</span> : label}
     </button>
   );
 }

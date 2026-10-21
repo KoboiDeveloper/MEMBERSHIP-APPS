@@ -7,7 +7,7 @@ export const getCategoryPromo = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `https://golangapi-j5iu.onrender.com/api/v2.0/member/mobile/promo/category`,
+        `${process.env.NEXT_PUBLIC_API_URL}promo/category`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

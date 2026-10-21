@@ -13,7 +13,8 @@ import axios from "axios";
 import Image from "next/image";
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FadeLoader } from "react-spinners";
+import PageError from "@/components/PageError";
+import { LuckyDrawSkeleton } from "@/components/PageSkeletons";
 
 type Redeem = {
   memberID: string;
@@ -38,7 +39,7 @@ export default function Page() {
 
   const { error, data } = useSelector((state: RootState) => state.lucky);
   const { data: luckyList } = useSelector(
-    (state: RootState) => state.luckyList
+    (state: RootState) => state.luckyList,
   );
 
   const [redeem, setRedeem] = useState<Redeem>({
@@ -101,7 +102,7 @@ export default function Page() {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.data.responseCode === "2002500") {
@@ -130,16 +131,11 @@ export default function Page() {
   };
 
   if (data == null) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <LuckyDrawSkeleton />;
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return <PageError />;
   }
 
   return (
@@ -150,7 +146,7 @@ export default function Page() {
             {/* Header */}
             <div className="bg-white w-full sticky top-0 z-10">
               <div className="flex justify-between items-center p-6">
-                <span className="text-xs">LUCKY DRAW</span>
+                <span className="text-xs">UNDIAN</span>
                 <button
                   onClick={() => window.history.back()}
                   className="text-black"
@@ -162,7 +158,7 @@ export default function Page() {
 
             {/* Image Section */}
             <Image
-              src={`https://web.amscorp.id:3060/imagestorage/voucher/${data.voucherData.imageUrl}`}
+              src={`${process.env.NEXT_PUBLIC_IMAGE_URL}voucher/${data.voucherData.imageUrl}`}
               alt="lucky"
               width={1240}
               height={1240}
@@ -188,14 +184,14 @@ export default function Page() {
               {/* Terms & Conditions */}
               {/* <div className="flex flex-col items-center justify-center my-4">
                   <span className="text-sm font-semibold">
-                    Terms & Condition
+                    Syarat & Ketentuan
                   </span>
                   <ol className="text-xs my-2 text-center list-decimal list-inside">
                     <li>Lorem ipsum dolloret sit amet bla bla..</li>
-                    <li>Voucher discount hanya dapat digunakan satu kali</li>
-                    <li>Voucher discount hanya dapat digunakan satu kali</li>
-                    <li>Voucher discount hanya dapat digunakan satu kali</li>
-                    <li>Voucher discount hanya dapat digunakan satu kali</li>
+                    <li>Voucher diskon hanya dapat digunakan satu kali</li>
+                    <li>Voucher diskon hanya dapat digunakan satu kali</li>
+                    <li>Voucher diskon hanya dapat digunakan satu kali</li>
+                    <li>Voucher diskon hanya dapat digunakan satu kali</li>
                   </ol>
                 </div> */}
 
@@ -269,7 +265,7 @@ export default function Page() {
             {/* Header */}
             <div className="bg-white w-full sticky top-0 z-10">
               <div className="flex justify-between items-center p-6">
-                <span className="text-xs">LUCKY DRAW</span>
+                <span className="text-xs">UNDIAN</span>
                 <button
                   onClick={() => window.history.back()}
                   className="text-black"
@@ -295,9 +291,9 @@ export default function Page() {
             <div className="flex justify-end items-center mb-4">
               <button
                 onClick={() => {
-                  setIsPinModalVisible(false),
+                  (setIsPinModalVisible(false),
                     setPinErrorMessage(""),
-                    setPin("");
+                    setPin(""));
                 }}
                 className="text-black"
               >
@@ -324,7 +320,7 @@ export default function Page() {
             <div className="flex justify-center">
               <Button
                 type="submit"
-                label="Submit"
+                label="Konfirmasi"
                 onClick={handlePinSubmit}
                 className="bg-base-accent text-white"
                 loading={isLoading}
