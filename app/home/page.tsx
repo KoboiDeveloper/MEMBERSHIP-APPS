@@ -4,10 +4,14 @@ import Brand from "@/components/Brand";
 import Carousel from "@/components/Carousel";
 import ModalInputPin from "@/components/ModalInputPin";
 import ModalQRCode from "@/components/ModalQrCode";
+import ModalSurveyPopup from "@/components/ModalSurveyPopup";
 import TabBar from "@/components/TabBar";
 import { useAppDispatch } from "@/redux/hooks";
 import { RootState } from "@/redux/store";
 import { getUsers } from "@/redux/thunks/usersThunks";
+import { getMission } from "@/redux/thunks/missionThunks";
+import { parseIndoDate } from "@/utils/formatMission";
+import type { Mission } from "@/types/mission";
 import formatToIDR from "@/utils/formatToIDR";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,6 +36,9 @@ export default function Page() {
   const [errorMessage, setErrorMessage] = useState(false);
   const { error, user } = useSelector((state: RootState) => state.users);
   const [year, setYear] = useState<string | null>(null);
+  const missionData = useSelector((state: RootState) => state.mission.data);
+  const [surveyQueue, setSurveyQueue] = useState<Mission[]>([]);
+  const surveyPopup = surveyQueue[0] ?? null;
 
   // Memuat data user saat komponen dirender
   useEffect(() => {
@@ -41,8 +48,33 @@ export default function Page() {
       router.replace("/"); // Redirect ke halaman login
     } else {
       dispatch(getUsers()); // Panggil thunk dengan token
+      dispatch(getMission()); // untuk popup MISSION_SURVEY
     }
   }, [dispatch, router]);
+
+  // Popup MISSION_SURVEY: tampil berurutan, sekali per mission untuk tiap member
+  useEffect(() => {
+    const member = localStorage.getItem("member");
+    if (!member) return;
+
+    const surveys = missionData?.missionsData?.filter((mission) => {
+      // survei disembunyikan sementara; hapus `true ||` untuk menampilkan lagi
+      if (true || mission.category !== "MISSION_SURVEY") return false;
+
+      const endDate = parseIndoDate(mission.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      if (endDate < new Date()) return false;
+
+      const details = mission.milestonesDetail ?? [];
+      const allClaimed =
+        details.length > 0 && details.every((m) => !!m.milClaimDate);
+      if (allClaimed) return false;
+
+      return !localStorage.getItem(`survey_popup_${member}_${mission.id}`);
+    });
+
+    setSurveyQueue(surveys ?? []);
+  }, [missionData]);
 
   useEffect(() => {
     const currentYear = user?.memberInfoData.joinDate.slice(0, 4);
@@ -65,6 +97,22 @@ export default function Page() {
   const closeModal = () => {
     setIsModalVisible(false);
     setIsShowQr(false);
+  };
+
+  const closeSurveyPopup = () => {
+    const member = localStorage.getItem("member");
+    if (member && surveyPopup) {
+      localStorage.setItem(`survey_popup_${member}_${surveyPopup.id}`, "1");
+    }
+    setSurveyQueue((queue) => queue.slice(1)); // lanjut ke popup berikutnya
+  };
+
+  const goToMission = () => {
+    const member = localStorage.getItem("member");
+    if (member && surveyPopup) {
+      localStorage.setItem(`survey_popup_${member}_${surveyPopup.id}`, "1");
+    }
+    router.push("/mission");
   };
 
   const handleCheckPin = (e: FormEvent<HTMLFormElement>) => {
@@ -336,6 +384,18 @@ export default function Page() {
                 closeModal={closeModal}
                 errorMessage={errorMessage}
                 maxLength={6}
+              />
+            )}
+
+            {/* Popup MISSION_SURVEY */}
+            {surveyPopup && (
+              <ModalSurveyPopup
+                imageUrl={surveyPopup.imageUrl}
+                brand={surveyPopup.brand}
+                title={surveyPopup.title}
+                description={surveyPopup.description}
+                closeModal={closeSurveyPopup}
+                onAction={goToMission}
               />
             )}
 

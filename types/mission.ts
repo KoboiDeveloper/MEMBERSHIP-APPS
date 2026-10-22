@@ -26,4 +26,5 @@ export type Mission = {
   progressText: string;
   statusMission: string;
   milestonesDetail: Milestone[];
+  surveyLink?: string | null; // hanya untuk category MISSION_SURVEY
 };

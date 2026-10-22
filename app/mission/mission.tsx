@@ -8,13 +8,17 @@ import { useSelector } from "react-redux";
 import { getMission } from "@/redux/thunks/missionThunks";
 import { RootState } from "@/redux/store";
 import formatToIDR from "@/utils/formatToIDR";
-import { FadeLoader } from "react-spinners";
 import axios from "axios";
 import SuccessMessage from "@/components/SuccessMessage";
+import ErrorMessage from "@/components/ErrorMessage";
+import SurveyModal from "@/components/SurveyModal";
 import { useRouter } from "next/navigation";
 import { formatDate, parseIndoDate } from "@/utils/formatMission";
 import getMissionStock from "@/utils/getMissionStock";
 import type { Mission, Milestone } from "@/types/mission";
+import canClaimByStock from "@/utils/canClaimByStock";
+import PageError from "@/components/PageError";
+import { MissionCardsSkeleton } from "@/components/PageSkeletons";
 
 export default function Mission({
   setSuccessMessageJoin,
@@ -32,6 +36,18 @@ export default function Mission({
   const [claimedMilestones, setClaimedMilestones] = useState<number[]>([]);
 
   const [isModalMessage, setIsModalMessage] = useState(false);
+  const [errorToast, setErrorToast] = useState("");
+
+  const showError = (message: string) => {
+    setErrorToast(message);
+    setTimeout(() => setErrorToast(""), 4000);
+  };
+
+  // survey (category MISSION_SURVEY)
+  const [surveyMission, setSurveyMission] = useState<Mission | null>(null);
+  const [submittedSurveyIds, setSubmittedSurveyIds] = useState<number[]>([]);
+  const [verifiedSurveyIds, setVerifiedSurveyIds] = useState<number[]>([]);
+  const [verifyingId, setVerifyingId] = useState<number | null>(null);
 
   useEffect(() => {
     const member = localStorage.getItem("member");
@@ -43,13 +59,25 @@ export default function Mission({
     }
   }, [dispatch, router, data]);
 
+  // Pulihkan status survei yang sudah diisi (tersimpan per member & misi)
   useEffect(() => {
-    if (isModalOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
+    const member = localStorage.getItem("member");
+    if (!member || !data?.missionsData) return;
+
+    const submitted = data.missionsData
+      .filter(
+        (mission) =>
+          mission.category === "MISSION_SURVEY" &&
+          localStorage.getItem(`survey_submitted_${member}_${mission.id}`),
+      )
+      .map((mission) => mission.id);
+
+    if (submitted.length > 0) {
+      setSubmittedSurveyIds((prev) =>
+        Array.from(new Set([...prev, ...submitted])),
+      );
     }
-  }, [isModalOpen]);
+  }, [data]);
 
   const handleOpenModal = (mission: Mission | null) => {
     setSelectedMission(mission);
@@ -82,7 +110,7 @@ export default function Mission({
         setIsModalOpen(false);
         dispatch(getMission());
       } else {
-        alert("Gagal join mission, silakan coba lagi.");
+        showError("Gagal bergabung ke misi, silakan coba lagi.");
         console.error("Failed to join mission:", response.data);
       }
     } catch (error) {
@@ -92,7 +120,7 @@ export default function Mission({
           setIsModalMessage(true);
           setTimeout(() => setIsModalMessage(false), 3000);
         } else {
-          alert("Terjadi kesalahan saat join mission.");
+          showError("Terjadi kesalahan saat bergabung ke misi.");
         }
       }
     } finally {
@@ -101,7 +129,10 @@ export default function Mission({
   };
 
   // Handle milestone claim
-  const handleClaimMilestone = async (milestone: Milestone) => {
+  const handleClaimMilestone = async (
+    milestone: Milestone,
+    missionId: number | undefined = selectedMission?.id,
+  ) => {
     setIsLoading(milestone.idMil);
     try {
       const token = localStorage.getItem("token");
@@ -112,7 +143,7 @@ export default function Mission({
           process.env.NEXT_PUBLIC_API_URL
         }mission/milestone/claim?memberID=${localStorage.getItem(
           "member",
-        )}&missionID=${selectedMission?.id}&milestoneID=${milestone.idMil}`,
+        )}&missionID=${missionId}&milestoneID=${milestone.idMil}`,
         null,
         {
           headers: {
@@ -125,35 +156,160 @@ export default function Mission({
         setClaimedMilestones((prev) => [...prev, milestone.idMil]);
         setSuccessMessageClaim(true);
         setTimeout(() => setSuccessMessageClaim(false), 3000);
+        dispatch(getMission());
       } else {
         console.error("Failed to claim milestone:", response.data);
-        alert("Gagal klaim milestone, silakan coba lagi."); // beri feedback ke user
+        showError("Gagal mengklaim milestone, silakan coba lagi.");
       }
     } catch (error) {
       console.error("Error claiming milestone:", error);
-      alert("Terjadi kesalahan saat klaim milestone."); // beri feedback ke user
+      showError("Terjadi kesalahan saat mengklaim milestone.");
     } finally {
       setIsLoading(null); // reset loading supaya tombol bisa diklik lagi
     }
   };
 
-  const canClaimByStock = (sisaClaim: string | number | null) => {
-    if (sisaClaim === "-") return true;
-    const stock = Number(sisaClaim);
-    return Number.isFinite(stock) && stock > 0;
+  const isSurveyMission = (mission: Mission) =>
+    mission.category === "MISSION_SURVEY";
+
+  // join -> mulai survei -> verifikasi -> klaim reward -> selesai
+  const getSurveyStep = (mission: Mission) => {
+    const details = mission.milestonesDetail ?? [];
+    const pending = details.find(
+      (m) => !m.milClaimDate && !claimedMilestones.includes(m.idMil),
+    );
+
+    if (details.length > 0 && !pending) {
+      return { step: "claimed" as const, milestone: undefined };
+    }
+    // Klaim hanya terbuka setelah verifikasi berhasil (atau backend sudah
+    // menandai milestone "complete")
+    if (
+      pending &&
+      (verifiedSurveyIds.includes(mission.id) ||
+        pending.milClaimStatus === "complete")
+    ) {
+      return { step: "claim" as const, milestone: pending };
+    }
+    // Form sudah dikirim, tinggal diverifikasi ke backend
+    if (pending && submittedSurveyIds.includes(mission.id)) {
+      return { step: "verify" as const, milestone: pending };
+    }
+    return { step: "start" as const, milestone: pending };
+  };
+
+  const handleStartSurvey = (mission: Mission) => {
+    if (!mission.surveyLink) {
+      showError("Survei belum tersedia untuk misi ini.");
+      return;
+    }
+    setSurveyMission(mission);
+  };
+
+  const handleSurveySubmitted = () => {
+    if (!surveyMission) return;
+    const member = localStorage.getItem("member");
+    if (member) {
+      localStorage.setItem(
+        `survey_submitted_${member}_${surveyMission.id}`,
+        "1",
+      );
+    }
+    setSubmittedSurveyIds((prev) => [...prev, surveyMission.id]);
+    setSurveyMission(null);
+  };
+
+  // Verifikasi ke backend bahwa member benar-benar sudah mengisi survei
+  const handleVerifySurvey = async (mission: Mission, milestone: Milestone) => {
+    setVerifyingId(mission.id);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}mission/survey/verify?memberID=${localStorage.getItem(
+          "member",
+        )}&missionID=${mission.id}&milestoneID=${milestone.idMil}`,
+        null,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (response.data.responseCode === "2002500") {
+        setVerifiedSurveyIds((prev) => [...prev, mission.id]);
+        dispatch(getMission());
+      } else {
+        showError(
+          "Verifikasi gagal. Pastikan survei sudah diisi, lalu coba lagi.",
+        );
+      }
+    } catch (error) {
+      console.error("Error verifying survey:", error);
+      showError("Terjadi kesalahan saat verifikasi survei.");
+    } finally {
+      setVerifyingId(null);
+    }
+  };
+
+  const renderSurveyAction = (mission: Mission) => {
+    const { step, milestone } = getSurveyStep(mission);
+
+    if (step === "claimed") {
+      return (
+        <div className="flex justify-center py-5">
+          <Link
+            href="/voucher"
+            className="bg-base-accent text-white text-sm fontMon tracking-wider p-4 rounded-full w-72 uppercase text-center"
+          >
+            Lihat Voucher
+          </Link>
+        </div>
+      );
+    }
+
+    if (step === "verify" && milestone) {
+      return (
+        <div className="flex flex-col items-center gap-3 py-5">
+          <span className="text-[10px] fontMon tracking-wider text-green-700 bg-green-50 border border-green-200 rounded-md px-3 py-2">
+            Response survei sudah terkirim
+          </span>
+          <Button
+            label="Verifikasi"
+            className="bg-base-accent text-white"
+            onClick={() => handleVerifySurvey(mission, milestone)}
+            loading={verifyingId === mission.id}
+          />
+        </div>
+      );
+    }
+
+    if (step === "claim" && milestone) {
+      return (
+        <div className="flex justify-center py-5">
+          <Button
+            label="Klaim Reward"
+            className="bg-base-accent text-white"
+            onClick={() => handleClaimMilestone(milestone, mission.id)}
+            loading={isLoading === milestone.idMil}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex justify-center py-5">
+        <Button
+          label="Mulai Survei"
+          className="bg-base-accent text-white"
+          onClick={() => handleStartSurvey(mission)}
+        />
+      </div>
+    );
   };
 
   if (!data) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <MissionCardsSkeleton />;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <PageError />;
   }
 
   if (isModalMessage) {
@@ -181,6 +337,7 @@ export default function Mission({
       {(() => {
         const activeMissions =
           data?.missionsData?.filter((mission) => {
+            if (isSurveyMission(mission)) return false; // survei disembunyikan
             const endDate = parseIndoDate(mission.endDate);
             endDate.setHours(23, 59, 59, 999); // biar full 1 hari
             return endDate >= new Date(); // yg masih aktif
@@ -202,7 +359,7 @@ export default function Mission({
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col w-full">
                     <Image
-                      src={`https://web.amscorp.id:3060/imagestorage/mission/${mission.imageUrl}`}
+                      src={`${process.env.NEXT_PUBLIC_IMAGE_URL}mission/${mission.imageUrl}`}
                       alt="mission"
                       width={600}
                       height={400}
@@ -234,7 +391,7 @@ export default function Mission({
 
                         <div className="flex justify-between items-center mt-2">
                           <div className="text-[9px] fontMon opacity-50 tracking-wider">
-                            Progress: {mission.progressText}
+                            Progres: {mission.progressText}
                           </div>
 
                           {stock.type === "number" && (
@@ -262,15 +419,17 @@ export default function Mission({
                         {mission.statusMission === "" && (
                           <div className="flex justify-center py-5">
                             <Button
-                              label={
-                                loadingId === mission.id ? "Joining..." : "JOIN"
-                              }
+                              label="Gabung"
                               className="bg-base-accent text-white"
                               onClick={() => handleJoinMission(mission.id)}
-                              disabled={loadingId === mission.id}
+                              loading={loadingId === mission.id}
                             />
                           </div>
                         )}
+
+                        {isSurveyMission(mission) &&
+                          mission.statusMission !== "" &&
+                          renderSurveyAction(mission)}
 
                         <span className="text-[10px] fontMon text-center tracking-wider opacity-50">
                           {(() => {
@@ -292,6 +451,22 @@ export default function Mission({
         });
       })()}
 
+      {/* Modal Survey */}
+      {surveyMission?.surveyLink && (
+        <SurveyModal
+          title={surveyMission.title}
+          url={surveyMission.surveyLink}
+          onClose={() => setSurveyMission(null)}
+          onSubmitted={handleSurveySubmitted}
+        />
+      )}
+
+      {successMessageClaim && !isModalOpen && (
+        <SuccessMessage message="Reward berhasil diklaim." />
+      )}
+
+      {errorToast && <ErrorMessage message={errorToast} />}
+
       {/* Modal Detail */}
       {isModalOpen && selectedMission && (
         <div
@@ -303,7 +478,7 @@ export default function Mission({
             onClick={(e) => e.stopPropagation()}
           >
             {successMessageClaim && (
-              <SuccessMessage message="Milestone claimed successfully." />
+              <SuccessMessage message="Milestone berhasil diklaim." />
             )}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">{selectedMission.title}</h2>
@@ -320,12 +495,12 @@ export default function Mission({
             <div className="space-y-3">
               <div
                 className={
-                  selectedMission.milestonesDetail.length > 3
+                  (selectedMission.milestonesDetail?.length ?? 0) > 3
                     ? "max-h-[46vh] overflow-y-auto pr-1" // 46% tinggi layar
                     : ""
                 }
               >
-                {selectedMission.milestonesDetail.map(
+                {(selectedMission.milestonesDetail ?? []).map(
                   (milestone: Milestone) => (
                     <div
                       key={milestone.idMil}
@@ -410,7 +585,7 @@ export default function Mission({
                             disabled={isLoading === milestone.idMil}
                           >
                             {isLoading === milestone.idMil
-                              ? "Klaiming..."
+                              ? "Mengklaim..."
                               : "Klaim"}
                           </button>
                         )
@@ -425,7 +600,7 @@ export default function Mission({
                             </Link>
                           ) : (
                             <Link
-                              href="https://tally.so/r/3lG9Lp"
+                              href={process.env.NEXT_PUBLIC_SURVEY_URL || "#"}
                               target="_blank"
                               className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
                             >

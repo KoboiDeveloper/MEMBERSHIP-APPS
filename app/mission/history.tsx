@@ -7,13 +7,15 @@ import { useSelector } from "react-redux";
 import { getMission } from "@/redux/thunks/missionThunks";
 import { RootState } from "@/redux/store";
 import formatToIDR from "@/utils/formatToIDR";
-import { FadeLoader } from "react-spinners";
 import axios from "axios";
 import SuccessMessage from "@/components/SuccessMessage";
 import { useRouter } from "next/navigation";
 import { formatDate, parseIndoDate } from "@/utils/formatMission";
 import getMissionStock from "@/utils/getMissionStock";
 import type { Mission, Milestone } from "@/types/mission";
+import canClaimByStock from "@/utils/canClaimByStock";
+import PageError from "@/components/PageError";
+import { MissionCardsSkeleton } from "@/components/PageSkeletons";
 
 export default function Page() {
   const router = useRouter();
@@ -34,14 +36,6 @@ export default function Page() {
       dispatch(getMission());
     }
   }, [dispatch, router, data]);
-
-  useEffect(() => {
-    if (isModalOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-  }, [isModalOpen]);
 
   const handleOpenModal = (mission: Mission | null) => {
     setSelectedMission(mission);
@@ -92,23 +86,12 @@ export default function Page() {
     }
   };
 
-  const canClaimByStock = (sisaClaim: string | number | null) => {
-    if (sisaClaim === "-") return true;
-    const stock = Number(sisaClaim);
-    return Number.isFinite(stock) && stock > 0;
-  };
-
   if (!data) {
-    return (
-      <div className="flex flex-col gap-4 justify-center items-center h-screen">
-        <Image src="/images/logo.svg" width={150} height={150} alt="logo" />
-        <FadeLoader color="#101E2B" width={5} />
-      </div>
-    );
+    return <MissionCardsSkeleton />;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <PageError />;
   }
 
   const endDate = parseIndoDate(selectedMission?.endDate || "");
@@ -120,6 +103,7 @@ export default function Page() {
       {(() => {
         const expiredMissions =
           data?.missionsData?.filter((mission) => {
+            if (mission.category === "MISSION_SURVEY") return false; // survei disembunyikan
             const endDate = parseIndoDate(mission.endDate);
             endDate.setHours(23, 59, 59, 999); // biar full 1 hari
             return endDate <= new Date(); // yang sudah lewat
@@ -141,7 +125,7 @@ export default function Page() {
                 <div className="flex justify-between items-center">
                   <div className="flex flex-col w-full">
                     <Image
-                      src={`https://web.amscorp.id:3060/imagestorage/mission/${mission.imageUrl}`}
+                      src={`${process.env.NEXT_PUBLIC_IMAGE_URL}mission/${mission.imageUrl}`}
                       alt="mission"
                       width={600}
                       height={400}
@@ -173,7 +157,7 @@ export default function Page() {
 
                         <div className="flex justify-between items-center mt-2">
                           <div className="text-[9px] fontMon opacity-50 tracking-wider">
-                            Progress: {mission.progressText}
+                            Progres: {mission.progressText}
                           </div>
 
                           {stock.type === "number" && (
@@ -229,7 +213,7 @@ export default function Page() {
             onClick={(e) => e.stopPropagation()}
           >
             {successMessageClaim && (
-              <SuccessMessage message="Milestone claimed successfully." />
+              <SuccessMessage message="Milestone berhasil diklaim." />
             )}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">{selectedMission.title}</h2>
@@ -246,12 +230,12 @@ export default function Page() {
             <div className="space-y-3">
               <div
                 className={
-                  selectedMission.milestonesDetail.length > 3
+                  (selectedMission.milestonesDetail?.length ?? 0) > 3
                     ? "max-h-[46vh] overflow-y-auto pr-1" // 46% tinggi layar
                     : ""
                 }
               >
-                {selectedMission.milestonesDetail.map(
+                {(selectedMission.milestonesDetail ?? []).map(
                   (milestone: Milestone) => (
                     <div
                       key={milestone.idMil}
@@ -329,7 +313,7 @@ export default function Page() {
                             disabled={isLoading === milestone.idMil}
                           >
                             {isLoading === milestone.idMil
-                              ? "Klaiming..."
+                              ? "Mengklaim..."
                               : "Klaim"}
                           </button>
                         )
@@ -344,7 +328,7 @@ export default function Page() {
                             </Link>
                           ) : (
                             <Link
-                              href="https://tally.so/r/3lG9Lp"
+                              href={process.env.NEXT_PUBLIC_SURVEY_URL || "#"}
                               target="_blank"
                               className="bg-base-accent text-white text-xs rounded-md py-1 px-4"
                             >
